@@ -14,8 +14,14 @@ local VIP_GAMEPASS_ID = 1656463027
 -- Crea un DataStore per salvare la velocità dei giocatori
 local SpeedDataStore = DataStoreService:GetDataStore("PlayerSpeedData")
 
+-- Crea un DataStore per salvare il playtime dei giocatori
+local PlaytimeDataStore = DataStoreService:GetDataStore("PlayerPlaytimeData")
+
 -- Tabella per tenere traccia della velocità corrente di ogni giocatore
 local playerSpeeds = {}
+
+-- Tabella per tenere traccia del playtime di ogni giocatore
+local playerPlaytimes = {}
 
 -- Tabella per tenere traccia dei giocatori VIP
 local playerVIPStatus = {}
@@ -62,8 +68,24 @@ local function loadPlayerData(player)
 	end
 end
 
+-- Funzione per caricare il playtime del giocatore
+local function loadPlayerPlaytime(player)
+	local success, savedPlaytime = pcall(function()
+		return PlaytimeDataStore:GetAsync(player.UserId)
+	end)
+
+	if success and savedPlaytime then
+		print("Playtime caricato per " .. player.Name .. ": " .. savedPlaytime .. " secondi")
+		return savedPlaytime
+	else
+		print("Nessun playtime salvato per " .. player.Name .. ", inizio da 0")
+		return 0
+	end
+end
+
 -- Funzione per salvare i dati del giocatore
 local function savePlayerData(player)
+	-- Salva la velocità
 	if playerSpeeds[player.UserId] then
 		local success, errorMessage = pcall(function()
 			SpeedDataStore:SetAsync(player.UserId, playerSpeeds[player.UserId])
@@ -73,6 +95,19 @@ local function savePlayerData(player)
 			print("Dati salvati per " .. player.Name .. ": Velocità " .. playerSpeeds[player.UserId])
 		else
 			warn("Errore nel salvataggio dati per " .. player.Name .. ": " .. tostring(errorMessage))
+		end
+	end
+
+	-- Salva il playtime
+	if playerPlaytimes[player.UserId] then
+		local success, errorMessage = pcall(function()
+			PlaytimeDataStore:SetAsync(player.UserId, playerPlaytimes[player.UserId])
+		end)
+
+		if success then
+			print("Playtime salvato per " .. player.Name .. ": " .. playerPlaytimes[player.UserId] .. " secondi")
+		else
+			warn("Errore nel salvataggio playtime per " .. player.Name .. ": " .. tostring(errorMessage))
 		end
 	end
 end
@@ -111,8 +146,13 @@ local function onPlayerAdded(player)
 	local savedSpeed = loadPlayerData(player)
 	playerSpeeds[player.UserId] = savedSpeed
 
-	-- Aggiorna la leaderboard con la velocità iniziale
+	-- Carica il playtime salvato del giocatore
+	local savedPlaytime = loadPlayerPlaytime(player)
+	playerPlaytimes[player.UserId] = savedPlaytime
+
+	-- Aggiorna la leaderboard con i valori iniziali
 	speedValue.Value = savedSpeed
+	playtimeValue.Value = savedPlaytime
 
 	-- Timer per il Playtime (aumenta ogni secondo)
 	spawn(function()
@@ -120,6 +160,7 @@ local function onPlayerAdded(player)
 			wait(1)
 			if playtimeValue and playtimeValue.Parent then
 				playtimeValue.Value = playtimeValue.Value + 1
+				playerPlaytimes[player.UserId] = playtimeValue.Value -- Aggiorna la tabella per il salvataggio
 			else
 				break
 			end
@@ -182,6 +223,7 @@ local function onPlayerRemoving(player)
 
 	-- Pulisci le tabelle
 	playerSpeeds[player.UserId] = nil
+	playerPlaytimes[player.UserId] = nil
 	playerVIPStatus[player.UserId] = nil
 end
 
