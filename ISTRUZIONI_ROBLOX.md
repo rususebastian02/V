@@ -1,30 +1,51 @@
 # Script Speed Gain per Roblox Studio
 
 ## Descrizione
-Questo script aumenta automaticamente la velocità di camminata (WalkSpeed) del giocatore di +1 ogni secondo, all'infinito. Include un sistema di salvataggio che mantiene i tuoi progressi e una leaderboard visibile con Speed e Playtime in tempo reale!
+Questo script aumenta automaticamente la velocità di camminata (WalkSpeed) del giocatore di +1 ogni secondo, all'infinito. Include un sistema di salvataggio che mantiene i tuoi progressi, una leaderboard visibile con Speed e Playtime in tempo reale, e un sistema VIP con bonus +50% velocità e tag dorato in chat!
 
 ## Come Installare
 
+### Script Principale (Velocità e Leaderboard)
 1. Apri il tuo progetto in **Roblox Studio**
 2. Nel pannello **Explorer**, trova **ServerScriptService**
 3. Fai click destro su **ServerScriptService** → **Insert Object** → **Script**
-4. Rinomina il nuovo script in "SpeedGainScript" (facoltativo)
+4. Rinomina il nuovo script in "SpeedGainScript"
 5. Copia tutto il contenuto del file `SpeedGainScript.lua` e incollalo nello script
-6. Premi **Play** per testare!
+6. Salva (Ctrl+S)
+
+### Script Tag VIP in Chat (Opzionale)
+7. Fai di nuovo click destro su **ServerScriptService** → **Insert Object** → **Script**
+8. Rinomina questo script in "ChatTagScript"
+9. Copia tutto il contenuto del file `ChatTagScript.lua` e incollalo nello script
+10. Salva (Ctrl+S)
+11. Premi **Play** per testare!
 
 ## Funzionalità
 
+### Base
 - ✅ Funziona per tutti i giocatori nel server
 - ✅ Incremento automatico di +1 WalkSpeed ogni secondo
 - ✅ Continua all'infinito finché il giocatore è in gioco
 - ✅ Si riattiva automaticamente quando il personaggio rinasce
+
+### Leaderboard
 - ✅ **Leaderboard integrata con Speed e Playtime**
 - ✅ Aggiornamento in tempo reale della velocità nella leaderboard
 - ✅ Contatore Playtime che mostra i secondi trascorsi in gioco
+
+### Salvataggio
 - ✅ **Salvataggio automatico dei progressi con DataStore**
 - ✅ Riprendi dalla velocità esatta quando rientri nel gioco
 - ✅ Backup automatico ogni 60 secondi
 - ✅ Salvataggio sicuro quando esci o il server si chiude
+
+### Sistema VIP 🌟
+- ✅ **Bonus +50% velocità** (+1.5 invece di +1 ogni secondo)
+- ✅ **Tag [VIP] dorato in chat** davanti al nome
+- ✅ Riconoscimento automatico del Game Pass VIP
+- ✅ Messaggi personalizzati nella Output Console
+
+### Extra
 - ✅ Include messaggi di debug nella Output Console
 
 ## 📊 Leaderboard
@@ -54,6 +75,56 @@ Lo script crea automaticamente una **leaderboard visibile** nell'angolo in alto 
 - 60 secondi = 1 minuto
 - 3600 secondi = 1 ora
 - Per esempio: 3845 secondi = 64 minuti ≈ 1 ora e 4 minuti
+
+## 🌟 Sistema VIP
+
+Il sistema VIP offre vantaggi esclusivi ai giocatori che possiedono il **Game Pass VIP**!
+
+### ID Game Pass
+Il Game Pass utilizzato è: **1656463027**
+
+### Vantaggi VIP
+
+#### 1. Bonus Velocità +50%
+- **Giocatori normali**: +1 velocità ogni secondo
+- **Giocatori VIP**: +1.5 velocità ogni secondo
+- Il bonus si applica **automaticamente** quando entri nel gioco
+
+#### 2. Tag [VIP] Dorato in Chat
+- Appare davanti al tuo nome quando scrivi in chat
+- Colore **dorato** (#FFD700) per distinguerti dagli altri
+- Si attiva automaticamente se hai il Game Pass
+
+### Come Funziona
+1. Il giocatore entra nel gioco
+2. Lo script controlla automaticamente se possiede il Game Pass VIP (ID: 1656463027)
+3. Se sì:
+   - Guadagna +1.5 velocità ogni secondo invece di +1
+   - I suoi messaggi in chat mostrano il tag **[VIP]** dorato
+4. Se no:
+   - Guadagna +1 velocità ogni secondo (normale)
+   - Nessun tag in chat
+
+### Esempio Confronto
+
+**Giocatore Normale** dopo 2 minuti:
+- Velocità: 16 (base) + 120 (2 min × 60 sec × 1) = **136**
+
+**Giocatore VIP** dopo 2 minuti:
+- Velocità: 16 (base) + 180 (2 min × 60 sec × 1.5) = **196** 🌟
+- **60 punti in più!**
+
+### Chat VIP
+Quando un giocatore VIP scrive in chat, il messaggio appare così:
+```
+[VIP] NomeGiocatore: Ciao a tutti!
+```
+Il tag [VIP] è di colore dorato per risaltare.
+
+### Note Importanti
+- Il bonus VIP funziona **solo se possiedi il Game Pass**
+- Il controllo viene fatto ogni volta che entri nel server
+- Se acquisti il Game Pass mentre sei in gioco, dovrai uscire e rientrare
 
 ## Personalizzazione
 
@@ -149,3 +220,16 @@ local SpeedDataStore = DataStoreService:GetDataStore("PlayerSpeedData_v2")
 - Verifica che lo script sia in **ServerScriptService**
 - Riprova a premere Stop e poi Play in Studio
 - Controlla la Output Console per eventuali errori
+
+### Il VIP non funziona (non ottengo +1.5 velocità):
+- Verifica di possedere il Game Pass con ID **1656463027**
+- Il controllo VIP funziona solo su server pubblicati
+- Controlla la Output Console: dovresti vedere "🌟 [nome] è un giocatore VIP!"
+- Se hai appena acquistato il pass, esci e rientra nel gioco
+- Assicurati che entrambi gli script siano in **ServerScriptService**
+
+### Il tag [VIP] non appare in chat:
+- Assicurati di aver installato anche **ChatTagScript.lua**
+- Verifica che il gioco usi **TextChatService** (nuovo sistema chat)
+- Se usi il vecchio sistema chat legacy, il tag potrebbe non apparire
+- Controlla la Output Console per errori relativi alla chat

@@ -1,10 +1,15 @@
 -- Script per aumentare la velocità del giocatore di +1 ogni secondo
 -- Include sistema di salvataggio dati con DataStore
 -- Include leaderboard con Speed e Playtime in tempo reale
+-- Include sistema VIP con bonus +50% velocità
 -- Da inserire in ServerScriptService in Roblox Studio
 
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+-- ID del Game Pass VIP
+local VIP_GAMEPASS_ID = 1656463027
 
 -- Crea un DataStore per salvare la velocità dei giocatori
 local SpeedDataStore = DataStoreService:GetDataStore("PlayerSpeedData")
@@ -12,8 +17,35 @@ local SpeedDataStore = DataStoreService:GetDataStore("PlayerSpeedData")
 -- Tabella per tenere traccia della velocità corrente di ogni giocatore
 local playerSpeeds = {}
 
+-- Tabella per tenere traccia dei giocatori VIP
+local playerVIPStatus = {}
+
 -- Velocità di default
 local DEFAULT_SPEED = 16
+
+-- Funzione per verificare se un giocatore ha il VIP Game Pass
+local function checkVIPStatus(player)
+	local hasPass = false
+	local success, result = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, VIP_GAMEPASS_ID)
+	end)
+
+	if success then
+		hasPass = result
+	else
+		warn("Errore nel controllo VIP per " .. player.Name .. ": " .. tostring(result))
+	end
+
+	playerVIPStatus[player.UserId] = hasPass
+
+	if hasPass then
+		print("🌟 " .. player.Name .. " è un giocatore VIP!")
+	else
+		print(player.Name .. " non è VIP")
+	end
+
+	return hasPass
+end
 
 -- Funzione per caricare i dati del giocatore
 local function loadPlayerData(player)
@@ -69,6 +101,9 @@ end
 
 -- Funzione per gestire ogni giocatore
 local function onPlayerAdded(player)
+	-- Controlla se il giocatore è VIP
+	local isVIP = checkVIPStatus(player)
+
 	-- Crea la leaderboard per il giocatore
 	local speedValue, playtimeValue = createLeaderboard(player)
 
@@ -107,7 +142,10 @@ local function onPlayerAdded(player)
 
 				-- Verifica che l'Humanoid esista ancora
 				if humanoid and humanoid.Parent then
-					humanoid.WalkSpeed = humanoid.WalkSpeed + 1
+					-- Determina l'incremento di velocità (VIP = +1.5, Normal = +1)
+					local speedIncrease = playerVIPStatus[player.UserId] and 1.5 or 1
+
+					humanoid.WalkSpeed = humanoid.WalkSpeed + speedIncrease
 					playerSpeeds[player.UserId] = humanoid.WalkSpeed
 
 					-- Aggiorna la leaderboard in tempo reale
@@ -115,7 +153,12 @@ local function onPlayerAdded(player)
 						speedValue.Value = math.floor(humanoid.WalkSpeed)
 					end
 
-					print("Velocità di " .. player.Name .. ": " .. humanoid.WalkSpeed)
+					-- Messaggio diverso per VIP
+					if playerVIPStatus[player.UserId] then
+						print("🌟 [VIP] Velocità di " .. player.Name .. ": " .. humanoid.WalkSpeed .. " (+1.5)")
+					else
+						print("Velocità di " .. player.Name .. ": " .. humanoid.WalkSpeed .. " (+1)")
+					end
 				else
 					break -- Esce dal loop se l'Humanoid non esiste più
 				end
@@ -137,8 +180,9 @@ local function onPlayerRemoving(player)
 	-- Salva i dati prima che il giocatore esca
 	savePlayerData(player)
 
-	-- Pulisci la tabella
+	-- Pulisci le tabelle
 	playerSpeeds[player.UserId] = nil
+	playerVIPStatus[player.UserId] = nil
 end
 
 -- Applica la funzione a tutti i giocatori attuali
