@@ -18,7 +18,14 @@ Questo script aumenta automaticamente la velocità di camminata (WalkSpeed) del 
 8. Rinomina questo script in "ChatTagScript"
 9. Copia tutto il contenuto del file `ChatTagScript.lua` e incollalo nello script
 10. Salva (Ctrl+S)
-11. Premi **Play** per testare!
+
+### GUI Shop VIP (Opzionale ma Consigliato)
+11. Nel pannello **Explorer**, trova **StarterGui**
+12. Fai click destro su **StarterGui** → **Insert Object** → **LocalScript**
+13. Rinomina questo script in "VIPShopGUI"
+14. Copia tutto il contenuto del file `VIPShopGUI.lua` e incollalo nello script
+15. Salva (Ctrl+S)
+16. Premi **Play** per testare!
 
 ## Funzionalità
 
@@ -44,6 +51,9 @@ Questo script aumenta automaticamente la velocità di camminata (WalkSpeed) del 
 - ✅ **Tag [VIP] dorato in chat** davanti al nome
 - ✅ Riconoscimento automatico del Game Pass VIP
 - ✅ Messaggi personalizzati nella Output Console
+- ✅ **GUI Shop VIP in-game** per acquisto diretto del Game Pass
+- ✅ Pulsante VIP sempre visibile nell'angolo in alto a destra
+- ✅ Interfaccia moderna con descrizione vantaggi
 
 ### Extra
 - ✅ Include messaggi di debug nella Output Console
@@ -125,6 +135,39 @@ Il tag [VIP] è di colore dorato per risaltare.
 - Il bonus VIP funziona **solo se possiedi il Game Pass**
 - Il controllo viene fatto ogni volta che entri nel server
 - Se acquisti il Game Pass mentre sei in gioco, dovrai uscire e rientrare
+
+### 🛒 GUI Shop VIP (In-Game)
+
+Se hai installato lo script **VIPShopGUI.lua**, i giocatori potranno acquistare il VIP direttamente dal gioco!
+
+#### Come Appare
+Quando entri nel gioco, vedrai un **pulsante dorato "🌟 VIP"** nell'angolo in alto a destra dello schermo.
+
+#### Come Funziona
+1. **Clicca sul pulsante "🌟 VIP"**
+2. Si apre una **finestra elegante** che mostra:
+   - Titolo "🌟 VIP PASS 🌟"
+   - Lista completa dei vantaggi VIP
+   - Pulsante verde "💎 ACQUISTA VIP"
+   - Pulsante rosso "✕" per chiudere
+3. **Clicca "💎 ACQUISTA VIP"**
+4. Si apre la **schermata di acquisto ufficiale di Roblox**
+5. Completa l'acquisto
+6. Ricevi un messaggio "✅ VIP ACQUISTATO!"
+7. Il pulsante VIP scompare (sei già VIP!)
+
+#### Caratteristiche GUI
+- 🎨 **Design moderno** con colori dorati
+- 📱 **Interfaccia user-friendly**
+- ✨ **Effetti hover** sui pulsanti
+- 🔒 **Si nasconde automaticamente** se sei già VIP
+- 💯 **Sicura** - usa le API ufficiali di Roblox
+
+#### Personalizzazione GUI
+Puoi modificare la posizione o i colori modificando lo script:
+- **Posizione pulsante**: riga 105 `Position = UDim2.new(1, -140, 0, 20)`
+- **Colore dorato**: `Color3.fromRGB(255, 215, 0)` (cambialo con i tuoi colori RGB)
+- **Testo vantaggi**: righe 65-78
 
 ## Personalizzazione
 
@@ -233,3 +276,14 @@ local SpeedDataStore = DataStoreService:GetDataStore("PlayerSpeedData_v2")
 - Verifica che il gioco usi **TextChatService** (nuovo sistema chat)
 - Se usi il vecchio sistema chat legacy, il tag potrebbe non apparire
 - Controlla la Output Console per errori relativi alla chat
+
+### Non vedo il pulsante VIP Shop:
+- Verifica che **VIPShopGUI.lua** sia in **StarterGui** come **LocalScript**
+- Se sei già VIP, il pulsante si nasconde automaticamente
+- Controlla la Output Console: dovresti vedere "✅ GUI VIP Shop caricata!"
+- Riprova a premere Stop e poi Play in Studio
+
+### Il pulsante VIP non fa nulla quando ci clicco:
+- Assicurati di aver pubblicato il gioco (l'acquisto funziona solo su giochi pubblicati)
+- Controlla di avere il Game Pass ID corretto (1656463027)
+- Verifica che MarketplaceService sia accessibile nel tuo gioco
