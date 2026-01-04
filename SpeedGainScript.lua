@@ -1,5 +1,6 @@
 -- Script per aumentare la velocità del giocatore di +1 ogni secondo
 -- Include sistema di salvataggio dati con DataStore
+-- Include leaderboard con Speed e Playtime in tempo reale
 -- Da inserire in ServerScriptService in Roblox Studio
 
 local Players = game:GetService("Players")
@@ -44,11 +45,51 @@ local function savePlayerData(player)
 	end
 end
 
+-- Funzione per creare la leaderboard
+local function createLeaderboard(player)
+	-- Crea la cartella leaderstats (necessaria per la leaderboard)
+	local leaderstats = Instance.new("Folder")
+	leaderstats.Name = "leaderstats"
+	leaderstats.Parent = player
+
+	-- Crea il valore Speed per la leaderboard
+	local speedValue = Instance.new("IntValue")
+	speedValue.Name = "Speed"
+	speedValue.Value = 0
+	speedValue.Parent = leaderstats
+
+	-- Crea il valore Playtime per la leaderboard
+	local playtimeValue = Instance.new("IntValue")
+	playtimeValue.Name = "Playtime"
+	playtimeValue.Value = 0
+	playtimeValue.Parent = leaderstats
+
+	return speedValue, playtimeValue
+end
+
 -- Funzione per gestire ogni giocatore
 local function onPlayerAdded(player)
+	-- Crea la leaderboard per il giocatore
+	local speedValue, playtimeValue = createLeaderboard(player)
+
 	-- Carica la velocità salvata del giocatore
 	local savedSpeed = loadPlayerData(player)
 	playerSpeeds[player.UserId] = savedSpeed
+
+	-- Aggiorna la leaderboard con la velocità iniziale
+	speedValue.Value = savedSpeed
+
+	-- Timer per il Playtime (aumenta ogni secondo)
+	spawn(function()
+		while player and player.Parent do
+			wait(1)
+			if playtimeValue and playtimeValue.Parent then
+				playtimeValue.Value = playtimeValue.Value + 1
+			else
+				break
+			end
+		end
+	end)
 
 	-- Aspetta che il personaggio del giocatore venga caricato
 	player.CharacterAdded:Connect(function(character)
@@ -68,6 +109,12 @@ local function onPlayerAdded(player)
 				if humanoid and humanoid.Parent then
 					humanoid.WalkSpeed = humanoid.WalkSpeed + 1
 					playerSpeeds[player.UserId] = humanoid.WalkSpeed
+
+					-- Aggiorna la leaderboard in tempo reale
+					if speedValue and speedValue.Parent then
+						speedValue.Value = math.floor(humanoid.WalkSpeed)
+					end
+
 					print("Velocità di " .. player.Name .. ": " .. humanoid.WalkSpeed)
 				else
 					break -- Esce dal loop se l'Humanoid non esiste più
