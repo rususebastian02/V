@@ -1,14 +1,63 @@
 -- Script per aumentare la velocità del giocatore di +1 ogni secondo
+-- Include sistema di salvataggio dati con DataStore
 -- Da inserire in ServerScriptService in Roblox Studio
 
 local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+
+-- Crea un DataStore per salvare la velocità dei giocatori
+local SpeedDataStore = DataStoreService:GetDataStore("PlayerSpeedData")
+
+-- Tabella per tenere traccia della velocità corrente di ogni giocatore
+local playerSpeeds = {}
+
+-- Velocità di default
+local DEFAULT_SPEED = 16
+
+-- Funzione per caricare i dati del giocatore
+local function loadPlayerData(player)
+	local success, savedSpeed = pcall(function()
+		return SpeedDataStore:GetAsync(player.UserId)
+	end)
+
+	if success and savedSpeed then
+		print("Dati caricati per " .. player.Name .. ": Velocità " .. savedSpeed)
+		return savedSpeed
+	else
+		print("Nessun dato salvato per " .. player.Name .. ", uso velocità di default")
+		return DEFAULT_SPEED
+	end
+end
+
+-- Funzione per salvare i dati del giocatore
+local function savePlayerData(player)
+	if playerSpeeds[player.UserId] then
+		local success, errorMessage = pcall(function()
+			SpeedDataStore:SetAsync(player.UserId, playerSpeeds[player.UserId])
+		end)
+
+		if success then
+			print("Dati salvati per " .. player.Name .. ": Velocità " .. playerSpeeds[player.UserId])
+		else
+			warn("Errore nel salvataggio dati per " .. player.Name .. ": " .. tostring(errorMessage))
+		end
+	end
+end
 
 -- Funzione per gestire ogni giocatore
 local function onPlayerAdded(player)
+	-- Carica la velocità salvata del giocatore
+	local savedSpeed = loadPlayerData(player)
+	playerSpeeds[player.UserId] = savedSpeed
+
 	-- Aspetta che il personaggio del giocatore venga caricato
 	player.CharacterAdded:Connect(function(character)
 		-- Trova l'Humanoid nel personaggio
 		local humanoid = character:WaitForChild("Humanoid")
+
+		-- Imposta la velocità salvata
+		humanoid.WalkSpeed = playerSpeeds[player.UserId]
+		print("Velocità iniziale di " .. player.Name .. ": " .. humanoid.WalkSpeed)
 
 		-- Loop infinito che aumenta la velocità ogni secondo
 		spawn(function()
@@ -18,13 +67,31 @@ local function onPlayerAdded(player)
 				-- Verifica che l'Humanoid esista ancora
 				if humanoid and humanoid.Parent then
 					humanoid.WalkSpeed = humanoid.WalkSpeed + 1
+					playerSpeeds[player.UserId] = humanoid.WalkSpeed
 					print("Velocità di " .. player.Name .. ": " .. humanoid.WalkSpeed)
 				else
 					break -- Esce dal loop se l'Humanoid non esiste più
 				end
 			end
 		end)
+
+		-- Salva i dati ogni 60 secondi come backup
+		spawn(function()
+			while character and character.Parent do
+				wait(60)
+				savePlayerData(player)
+			end
+		end)
 	end)
+end
+
+-- Funzione chiamata quando un giocatore esce
+local function onPlayerRemoving(player)
+	-- Salva i dati prima che il giocatore esca
+	savePlayerData(player)
+
+	-- Pulisci la tabella
+	playerSpeeds[player.UserId] = nil
 end
 
 -- Applica la funzione a tutti i giocatori attuali
@@ -34,3 +101,14 @@ end
 
 -- Applica la funzione ai nuovi giocatori che si uniscono
 Players.PlayerAdded:Connect(onPlayerAdded)
+
+-- Salva i dati quando un giocatore esce
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+
+-- Salva tutti i dati quando il server si chiude
+game:BindToClose(function()
+	for _, player in pairs(Players:GetPlayers()) do
+		savePlayerData(player)
+	end
+	wait(2) -- Aspetta per assicurarsi che i dati vengano salvati
+end)
