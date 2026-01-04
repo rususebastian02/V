@@ -125,8 +125,8 @@ closeButtonCorner.Parent = closeButton
 -- Pulsante per aprire la GUI (sempre visibile) - IMMAGINE PERSONALIZZATA
 local openButton = Instance.new("ImageButton")
 openButton.Name = "OpenButton"
-openButton.Size = UDim2.new(0, 120, 0, 120) -- Quadrato per l'immagine
-openButton.Position = UDim2.new(1, -140, 0, 20)
+openButton.Size = UDim2.new(0, 160, 0, 160) -- Quadrato per l'immagine (PIÙ GRANDE)
+openButton.Position = UDim2.new(1, -180, 0, 20)
 openButton.BackgroundTransparency = 1 -- Trasparente per mostrare solo l'immagine
 openButton.BorderSizePixel = 0
 openButton.Image = "rbxassetid://126083617423149" -- La tua immagine personalizzata
@@ -188,11 +188,11 @@ addHoverEffect(closeButton, Color3.fromRGB(200, 50, 50), Color3.fromRGB(220, 70,
 
 -- Effetto hover per ImageButton (scala l'immagine)
 openButton.MouseEnter:Connect(function()
-	openButton.Size = UDim2.new(0, 130, 0, 130) -- Ingrandisce leggermente
+	openButton.Size = UDim2.new(0, 180, 0, 180) -- Ingrandisce leggermente (PIÙ GRANDE)
 end)
 
 openButton.MouseLeave:Connect(function()
-	openButton.Size = UDim2.new(0, 120, 0, 120) -- Torna alla dimensione normale
+	openButton.Size = UDim2.new(0, 160, 0, 160) -- Torna alla dimensione normale
 end)
 
 -- Gestisci l'acquisto completato
