@@ -15,8 +15,8 @@ local VIP_GAMEPASS_ID = 1656463027
 
 -- Lista degli ID giocatori OWNER (Tag rosso scuro)
 local OWNER_IDS = {
-	-- Aggiungi qui gli ID dei giocatori Owner
-	-- Esempio: 123456789, 987654321
+	144351341,  -- S3BATM (Owner)
+	-- Aggiungi altri owner qui se necessario
 }
 
 -- Lista degli ID giocatori ADMIN (Tag rosso)
