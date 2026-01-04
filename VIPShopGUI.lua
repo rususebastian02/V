@@ -69,18 +69,18 @@ local benefitsText = Instance.new("TextLabel")
 benefitsText.Name = "Benefits"
 benefitsText.Size = UDim2.new(1, 0, 0, 240)
 benefitsText.BackgroundTransparency = 1
-benefitsText.Text = [[Diventa VIP e ottieni:
+benefitsText.Text = [[Become VIP and get:
 
-✨ +50% Velocità Bonus
-   (+1.5 invece di +1 ogni secondo)
+✨ +50% Speed Bonus
+   (+1.5 instead of +1 per second)
 
-💬 Tag [VIP] Dorato in Chat
-   Distinguiti dagli altri giocatori!
+💬 Golden [VIP] Chat Tag
+   Stand out from other players!
 
-⚡ Vantaggi Esclusivi
-   Più veloce = Più divertimento!
+⚡ Exclusive Benefits
+   Faster = More fun!
 
-🎯 Supporta lo Sviluppatore]]
+🎯 Support the Developer]]
 benefitsText.TextColor3 = Color3.fromRGB(255, 255, 255)
 benefitsText.Font = Enum.Font.Gotham
 benefitsText.TextSize = 16
@@ -95,7 +95,7 @@ buyButton.Size = UDim2.new(0, 300, 0, 60)
 buyButton.Position = UDim2.new(0.5, -150, 0, 390)
 buyButton.BackgroundColor3 = Color3.fromRGB(0, 200, 80) -- Verde
 buyButton.BorderSizePixel = 0
-buyButton.Text = "💎 ACQUISTA VIP"
+buyButton.Text = "💎 BUY VIP"
 buyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 buyButton.Font = Enum.Font.GothamBold
 buyButton.TextSize = 22
@@ -209,7 +209,7 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(playerWhoJust
 			confirmLabel.Position = UDim2.new(0.5, -150, 0.5, -50)
 			confirmLabel.BackgroundColor3 = Color3.fromRGB(0, 200, 80)
 			confirmLabel.BorderSizePixel = 0
-			confirmLabel.Text = "✅ VIP ACQUISTATO!\nBenvenuto tra i VIP! 🌟"
+			confirmLabel.Text = "✅ VIP PURCHASED!\nWelcome to VIP! 🌟"
 			confirmLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 			confirmLabel.Font = Enum.Font.GothamBold
 			confirmLabel.TextSize = 20
