@@ -122,22 +122,16 @@ local closeButtonCorner = Instance.new("UICorner")
 closeButtonCorner.CornerRadius = UDim.new(0, 10)
 closeButtonCorner.Parent = closeButton
 
--- Pulsante per aprire la GUI (sempre visibile)
-local openButton = Instance.new("TextButton")
+-- Pulsante per aprire la GUI (sempre visibile) - IMMAGINE PERSONALIZZATA
+local openButton = Instance.new("ImageButton")
 openButton.Name = "OpenButton"
-openButton.Size = UDim2.new(0, 120, 0, 50)
+openButton.Size = UDim2.new(0, 120, 0, 120) -- Quadrato per l'immagine
 openButton.Position = UDim2.new(1, -140, 0, 20)
-openButton.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Oro
+openButton.BackgroundTransparency = 1 -- Trasparente per mostrare solo l'immagine
 openButton.BorderSizePixel = 0
-openButton.Text = "🌟 VIP"
-openButton.TextColor3 = Color3.fromRGB(30, 30, 35)
-openButton.Font = Enum.Font.GothamBold
-openButton.TextSize = 20
+openButton.Image = "rbxassetid://126083617423149" -- La tua immagine personalizzata
+openButton.ScaleType = Enum.ScaleType.Fit -- Adatta l'immagine mantenendo le proporzioni
 openButton.Parent = screenGui
-
-local openButtonCorner = Instance.new("UICorner")
-openButtonCorner.CornerRadius = UDim.new(0, 10)
-openButtonCorner.Parent = openButton
 
 -- Funzione per verificare se il giocatore ha già il VIP
 local function checkIfPlayerHasVIP()
@@ -191,7 +185,15 @@ end
 
 addHoverEffect(buyButton, Color3.fromRGB(0, 200, 80), Color3.fromRGB(0, 220, 100))
 addHoverEffect(closeButton, Color3.fromRGB(200, 50, 50), Color3.fromRGB(220, 70, 70))
-addHoverEffect(openButton, Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 230, 50))
+
+-- Effetto hover per ImageButton (scala l'immagine)
+openButton.MouseEnter:Connect(function()
+	openButton.Size = UDim2.new(0, 130, 0, 130) -- Ingrandisce leggermente
+end)
+
+openButton.MouseLeave:Connect(function()
+	openButton.Size = UDim2.new(0, 120, 0, 120) -- Torna alla dimensione normale
+end)
 
 -- Gestisci l'acquisto completato
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(playerWhoJustPurchased, purchasedPassId, wasPurchaseSuccessful)
