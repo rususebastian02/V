@@ -2,9 +2,13 @@
 -- VERSIONE PER TEXTCHATSERVICE (Nuovo sistema chat di Roblox)
 -- Da inserire in ServerScriptService in Roblox Studio
 
+print("🔧 [ChatTag] Inizializzazione script...")
+
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local TextChatService = game:GetService("TextChatService")
+
+print("✅ [ChatTag] Servizi caricati")
 
 -- ID del Game Pass VIP
 local VIP_GAMEPASS_ID = 1656463027
@@ -28,6 +32,9 @@ local ADMIN_IDS = {
 -- ========================================
 -- FINE SEZIONE MODIFICABILE
 -- ========================================
+
+print("📋 [ChatTag] Owner configurati: " .. #OWNER_IDS)
+print("📋 [ChatTag] Admin configurati: " .. #ADMIN_IDS)
 
 -- Funzione per verificare se un giocatore è Owner
 local function isOwner(player)
@@ -61,36 +68,49 @@ local function hasVIPPass(player)
 	return false
 end
 
+print("🔧 [ChatTag] Collegamento a TextChatService...")
+
 -- Modifica i messaggi in chat per aggiungere i tag
-TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-	local properties = Instance.new("TextChatMessageProperties")
+local success, errorMsg = pcall(function()
+	TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+		local properties = Instance.new("TextChatMessageProperties")
 
-	-- Trova il giocatore che ha inviato il messaggio
-	local player = Players:GetPlayerByUserId(message.TextSource.UserId)
-
-	if player then
-		-- Priorità: Owner > Admin > VIP
-		if isOwner(player) then
-			-- Tag OWNER (rosso scuro)
-			local prefix = '<font color="#8B0000">[OWNER]</font> '
-			properties.PrefixText = prefix .. message.PrefixText
-			print("👑 Tag [OWNER] applicato al messaggio di " .. player.Name)
-
-		elseif isAdmin(player) then
-			-- Tag ADMIN (rosso)
-			local prefix = '<font color="#FF0000">[ADMIN]</font> '
-			properties.PrefixText = prefix .. message.PrefixText
-			print("🛡️ Tag [ADMIN] applicato al messaggio di " .. player.Name)
-
-		elseif hasVIPPass(player) then
-			-- Tag VIP (oro) - solo se non è Owner o Admin
-			local prefix = '<font color="#FFD700">[VIP]</font> '
-			properties.PrefixText = prefix .. message.PrefixText
-			print("⭐ Tag [VIP] applicato al messaggio di " .. player.Name)
+		if not message.TextSource then
+			return properties
 		end
+
+		-- Trova il giocatore che ha inviato il messaggio
+		local player = Players:GetPlayerByUserId(message.TextSource.UserId)
+
+		if player then
+			-- Priorità: Owner > Admin > VIP
+			if isOwner(player) then
+				-- Tag OWNER (rosso scuro)
+				local prefix = '<font color="#8B0000">[OWNER]</font> '
+				properties.PrefixText = prefix .. message.PrefixText
+				print("👑 [ChatTag] Tag OWNER applicato a " .. player.Name)
+
+			elseif isAdmin(player) then
+				-- Tag ADMIN (rosso)
+				local prefix = '<font color="#FF0000">[ADMIN]</font> '
+				properties.PrefixText = prefix .. message.PrefixText
+				print("🛡️ [ChatTag] Tag ADMIN applicato a " .. player.Name)
+
+			elseif hasVIPPass(player) then
+				-- Tag VIP (oro) - solo se non è Owner o Admin
+				local prefix = '<font color="#FFD700">[VIP]</font> '
+				properties.PrefixText = prefix .. message.PrefixText
+				print("⭐ [ChatTag] Tag VIP applicato a " .. player.Name)
+			end
+		end
+
+		return properties
 	end
+end)
 
-	return properties
+if success then
+	print("🎨 [ChatTag] Sistema tag attivato! (Owner, Admin, VIP)")
+else
+	warn("❌ [ChatTag] ERRORE: " .. tostring(errorMsg))
+	warn("⚠️ [ChatTag] TextChatService potrebbe non essere configurato correttamente")
 end
-
-print("🎨 Sistema tag personalizzate in chat attivato! (Owner, Admin, VIP)")
