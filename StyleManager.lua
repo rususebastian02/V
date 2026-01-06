@@ -7,6 +7,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
+-- Require VFX Modules
+local PoseidonAbilities = require(ReplicatedStorage:WaitForChild("PoseidonAbilities"))
+
 -- Crea RemoteEvent per selezione stile
 local selectStyleEvent = ReplicatedStorage:FindFirstChild("SelectStyle")
 if not selectStyleEvent then
@@ -29,6 +32,76 @@ end
 local playerStyles = {}
 local playerCooldowns = {}
 
+-- Configurazione combat
+local ABILITY_RANGES = {
+	Q = 12,  -- Range abilità Q
+	E = 15,  -- Range abilità E
+	R = 20   -- Range abilità R (ultimate)
+}
+
+-- Helper: Trova nemici nel range
+local function findEnemiesInRange(attacker, range, angle)
+	local attackerChar = attacker.Character
+	if not attackerChar then return {} end
+
+	local attackerRoot = attackerChar:FindFirstChild("HumanoidRootPart")
+	if not attackerRoot then return {} end
+
+	local enemies = {}
+	local attackerPos = attackerRoot.Position
+	local attackerLook = attackerRoot.CFrame.LookVector
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= attacker then
+			local char = player.Character
+			if char then
+				local humanoid = char:FindFirstChild("Humanoid")
+				local root = char:FindFirstChild("HumanoidRootPart")
+
+				if humanoid and root and humanoid.Health > 0 then
+					local targetPos = root.Position
+					local distance = (attackerPos - targetPos).Magnitude
+
+					if distance <= range then
+						-- Controlla angolo
+						local directionToTarget = (targetPos - attackerPos).Unit
+						local dotProduct = attackerLook:Dot(directionToTarget)
+						local angleToTarget = math.deg(math.acos(math.clamp(dotProduct, -1, 1)))
+
+						if angleToTarget <= angle / 2 then
+							table.insert(enemies, {
+								Player = player,
+								Character = char,
+								Humanoid = humanoid,
+								RootPart = root,
+								Position = targetPos,
+								Distance = distance
+							})
+						end
+					end
+				end
+			end
+		end
+	end
+
+	-- Ordina per distanza
+	table.sort(enemies, function(a, b)
+		return a.Distance < b.Distance
+	end)
+
+	return enemies
+end
+
+-- Helper: Applica danno
+local function dealDamage(victim, damage, attacker)
+	if victim and victim.Health > 0 then
+		victim.Health = math.max(0, victim.Health - damage)
+		print("💥 [StyleManager] " .. attacker.Name .. " infligge " .. damage .. " danni a " .. victim.Parent.Name)
+		return true
+	end
+	return false
+end
+
 -- Configurazione stili (stats e abilità)
 local STYLE_CONFIGS = {
 	-- GODS
@@ -39,9 +112,9 @@ local STYLE_CONFIGS = {
 		AttackSpeed = 1.2,
 		Health = 100,
 		Abilities = {
-			{Name = "Tidal Wave", Damage = 50, Cooldown = 8, Key = "Q"},
-			{Name = "Ocean's Wrath", Damage = 80, Cooldown = 15, Key = "E"},
-			{Name = "Poseidon's Blessing", Damage = 0, Cooldown = 20, Key = "R"} -- Heal
+			{Name = "Amphitrite", Damage = 50, Cooldown = 7, Key = "Q"},
+			{Name = "Chione Tyro Demeter", Damage = 70, Cooldown = 12, Key = "E"},
+			{Name = "40 Day Flood", Damage = 100, Cooldown = 20, Key = "R"}
 		}
 	},
 	Zeus = {
@@ -223,8 +296,38 @@ useAbilityEvent.OnServerEvent:Connect(function(player, abilityKey)
 	-- Imposta cooldown
 	playerCooldowns[cooldownKey] = tick() + ability.Cooldown
 
-	-- Qui eseguirai l'abilità (damage, effects, etc.)
-	-- (lo faremo nel prossimo step)
+	-- Trova nemici nel range
+	local range = ABILITY_RANGES[abilityKey] or 15
+	local angle = 120 -- Angolo ampio per abilità
+	local enemies = findEnemiesInRange(player, range, angle)
+
+	-- Esegui abilità in base allo stile
+	local styleName = playerStyle.Name
+
+	if styleName == "Poseidon" then
+		-- VFX Poseidon
+		if abilityKey == "Q" then
+			PoseidonAbilities.Amphitrite(player, enemies)
+		elseif abilityKey == "E" then
+			PoseidonAbilities.ChioneTyroDemeter(player, enemies)
+		elseif abilityKey == "R" then
+			PoseidonAbilities.FortyDayFlood(player, enemies)
+		end
+
+		-- Applica damage
+		for _, enemy in ipairs(enemies) do
+			dealDamage(enemy.Humanoid, ability.Damage, player)
+		end
+
+	else
+		-- Altri stili (placeholder per ora)
+		print("⚠️ [StyleManager] VFX per " .. styleName .. " non ancora implementati")
+
+		-- Applica solo damage base
+		for _, enemy in ipairs(enemies) do
+			dealDamage(enemy.Humanoid, ability.Damage, player)
+		end
+	end
 end)
 
 -- Quando un giocatore entra
