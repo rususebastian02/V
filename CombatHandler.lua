@@ -7,6 +7,9 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
+-- Require VFX Modules
+local PoseidonAbilities = require(ReplicatedStorage:WaitForChild("PoseidonAbilities"))
+
 -- Crea RemoteEvent per attacco base
 local basicAttackEvent = ReplicatedStorage:FindFirstChild("BasicAttack")
 if not basicAttackEvent then
@@ -91,9 +94,15 @@ basicAttackEvent.OnServerEvent:Connect(function(player)
 	local humanoid = character:FindFirstChild("Humanoid")
 	if not humanoid or humanoid.Health <= 0 then return end
 
-	-- Ottieni configurazione stile (dallo StyleManager)
-	-- Per ora usiamo valori di default
+	-- Ottieni stile del giocatore
+	local playerStyle = _G.PlayerStyles and _G.PlayerStyles[player.UserId]
 	local baseDamage = 20
+	local styleName = nil
+
+	if playerStyle then
+		baseDamage = playerStyle.Config.BaseDamage or 20
+		styleName = playerStyle.Name
+	end
 
 	-- Trova nemici
 	local enemies = findEnemiesInRange(player, HIT_RANGE, HIT_ANGLE)
@@ -105,10 +114,25 @@ basicAttackEvent.OnServerEvent:Connect(function(player)
 		end)
 
 		local target = enemies[1]
+
+		-- ⚔️ CHIAMA VFX SPECIFICI DEL PERSONAGGIO
+		if styleName == "Poseidon" then
+			PoseidonAbilities.BasicAttack(player, target)
+		-- elseif styleName == "Zeus" then
+		--     ZeusAbilities.BasicAttack(player, target)
+		-- ... altri personaggi
+		end
+
+		-- Applica damage
 		dealDamage(target.Humanoid, baseDamage, player)
 
-		print("👊 [CombatHandler] " .. player.Name .. " attacco base su " .. target.Player.Name)
+		print("👊 [CombatHandler] " .. player.Name .. " (" .. (styleName or "No Style") .. ") attacco base su " .. target.Player.Name)
 	else
+		-- Nessun bersaglio, ma riproduci comunque VFX
+		if styleName == "Poseidon" then
+			PoseidonAbilities.BasicAttack(player, nil)
+		end
+
 		print("👊 [CombatHandler] " .. player.Name .. " attacco base (nessun bersaglio)")
 	end
 end)

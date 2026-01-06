@@ -7,6 +7,46 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 -- ========================================
+-- ANIMATION SYSTEM
+-- ========================================
+
+-- Animation IDs - SOSTITUISCI con i tuoi dopo averle create!
+-- Per ora usa "PLACEHOLDER" - il sistema funzionerà comunque senza animazioni
+local POSEIDON_ANIMATIONS = {
+	BasicAttacks = {
+		"PLACEHOLDER", -- BasicAttack1 - Affondo dritto
+		"PLACEHOLDER", -- BasicAttack2 - Slash orizzontale
+		"PLACEHOLDER"  -- BasicAttack3 - Attacco dall'alto
+	},
+	Amphitrite = "PLACEHOLDER",          -- Animazione Q
+	ChioneTyroDemeter = "PLACEHOLDER",   -- Animazione E
+	FortyDayFlood = "PLACEHOLDER"        -- Animazione R
+}
+
+-- Funzione per riprodurre animazione
+local function playAnimation(character, animId)
+	if not character then return end
+	if animId == "PLACEHOLDER" then return end -- Salta se non configurato
+
+	local humanoid = character:FindFirstChild("Humanoid")
+	if not humanoid then return end
+
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		animator = Instance.new("Animator")
+		animator.Parent = humanoid
+	end
+
+	local animation = Instance.new("Animation")
+	animation.AnimationId = animId
+
+	local track = animator:LoadAnimation(animation)
+	track:Play()
+
+	return track
+end
+
+-- ========================================
 -- UTILITY FUNCTIONS
 -- ========================================
 
@@ -121,6 +161,9 @@ end
 function PoseidonAbilities.Amphitrite(attacker, targets)
 	print("🌊 [Poseidon] Amphitrite!")
 
+	-- Riproduci animazione
+	playAnimation(attacker.Character, POSEIDON_ANIMATIONS.Amphitrite)
+
 	local character = attacker.Character
 	if not character then return end
 
@@ -180,6 +223,9 @@ end
 
 function PoseidonAbilities.ChioneTyroDemeter(attacker, targets)
 	print("🌊 [Poseidon] Chione Tyro Demeter!")
+
+	-- Riproduci animazione
+	playAnimation(attacker.Character, POSEIDON_ANIMATIONS.ChioneTyroDemeter)
 
 	local character = attacker.Character
 	if not character then return end
@@ -288,6 +334,9 @@ end
 
 function PoseidonAbilities.FortyDayFlood(attacker, targets)
 	print("🌊💥 [Poseidon] 40 DAY FLOOD!")
+
+	-- Riproduci animazione
+	playAnimation(attacker.Character, POSEIDON_ANIMATIONS.FortyDayFlood)
 
 	local character = attacker.Character
 	if not character then return end
@@ -466,6 +515,11 @@ function PoseidonAbilities.BasicAttack(attacker, target)
 	local rootPart = character:FindFirstChild("HumanoidRootPart")
 	if not rootPart then return end
 
+	-- ⚡ RANDOM: Scegli una delle 3 animazioni
+	local randomIndex = math.random(1, #POSEIDON_ANIMATIONS.BasicAttacks)
+	local selectedAnim = POSEIDON_ANIMATIONS.BasicAttacks[randomIndex]
+	playAnimation(character, selectedAnim)
+
 	-- Suono colpo
 	playSound("rbxassetid://9114487369", rootPart, 0.4)
 
@@ -474,15 +528,43 @@ function PoseidonAbilities.BasicAttack(attacker, target)
 		createSplashEffect(target.Position)
 	end
 
-	-- Particelle rapide sul braccio
-	local rightArm = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
-	if rightArm then
-		local particle = createWaterParticle(rightArm, 1, 0.3)
-		particle.Enabled = true
-		task.delay(0.2, function()
-			particle.Enabled = false
-			Debris:AddItem(particle, 1)
-		end)
+	-- Effetti sul TRIDENTE (se equipaggiato)
+	local trident = character:FindFirstChild("PoseidonTrident")
+	if trident then
+		local handle = trident:FindFirstChild("Handle")
+		if handle then
+			-- Particelle d'acqua dalla punta
+			local particle = createWaterParticle(handle, 1.5, 0.3)
+			particle.Enabled = true
+			task.delay(0.2, function()
+				particle.Enabled = false
+				Debris:AddItem(particle, 1)
+			end)
+
+			-- Flash blu sulla punta
+			local centerProng = trident:FindFirstChild("CenterProng")
+			if centerProng then
+				local originalBrightness = 2
+				local light = centerProng:FindFirstChild("PointLight")
+				if light then
+					light.Brightness = 5
+					task.delay(0.1, function()
+						light.Brightness = originalBrightness
+					end)
+				end
+			end
+		end
+	else
+		-- Fallback: Particelle sul braccio se non c'è tridente
+		local rightArm = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
+		if rightArm then
+			local particle = createWaterParticle(rightArm, 1, 0.3)
+			particle.Enabled = true
+			task.delay(0.2, function()
+				particle.Enabled = false
+				Debris:AddItem(particle, 1)
+			end)
+		end
 	end
 end
 

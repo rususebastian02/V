@@ -32,6 +32,9 @@ end
 local playerStyles = {}
 local playerCooldowns = {}
 
+-- Condividi playerStyles globalmente per CombatHandler
+_G.PlayerStyles = playerStyles
+
 -- Configurazione combat
 local ABILITY_RANGES = {
 	Q = 12,  -- Range abilità Q
@@ -250,8 +253,51 @@ local function applyStyle(player, styleName)
 	humanoid.MaxHealth = config.Health
 	humanoid.Health = config.Health
 
-	-- Qui puoi aggiungere l'arma/tool al giocatore
-	-- (lo faremo nel prossimo step)
+	-- ⚔️ AUTO-EQUIP ARMA
+	local weaponName = config.Weapon
+	if weaponName then
+		-- Rimuovi armi vecchie dal Backpack
+		for _, item in ipairs(player.Backpack:GetChildren()) do
+			if item:IsA("Tool") then
+				item:Destroy()
+			end
+		end
+
+		-- Rimuovi armi vecchie dal Character
+		for _, item in ipairs(character:GetChildren()) do
+			if item:IsA("Tool") then
+				item:Destroy()
+			end
+		end
+
+		-- Equipaggia nuova arma in base allo stile
+		local weaponTool = nil
+
+		if styleName == "Poseidon" then
+			weaponTool = ReplicatedStorage:FindFirstChild("PoseidonTrident")
+		elseif styleName == "Zeus" then
+			weaponTool = ReplicatedStorage:FindFirstChild("ZeusBolt")
+		elseif styleName == "Thor" then
+			weaponTool = ReplicatedStorage:FindFirstChild("Mjolnir")
+		elseif styleName == "Shiva" then
+			weaponTool = ReplicatedStorage:FindFirstChild("ShivaWeapon")
+		elseif styleName == "Hades" then
+			weaponTool = ReplicatedStorage:FindFirstChild("Bident")
+		-- Humans non hanno tool fisici (combattono a mani nude o con abilità)
+		end
+
+		if weaponTool then
+			local newTool = weaponTool:Clone()
+			newTool.Parent = character -- Equipaggia direttamente
+			print("⚔️ [StyleManager] " .. player.Name .. " equipaggia: " .. weaponName)
+		elseif styleName == "Poseidon" then
+			-- Solo warning per Poseidon, altri personaggi potrebbero non avere armi
+			warn("⚠️ [StyleManager] Arma '" .. weaponName .. "' non trovata in ReplicatedStorage!")
+			warn("⚠️ Usa CreatePoseidonTrident.lua per creare il tridente")
+		end
+	end
+
+	print("✅ [StyleManager] Stile applicato completamente: " .. styleName)
 end
 
 -- Quando un giocatore seleziona uno stile
