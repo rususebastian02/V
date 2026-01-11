@@ -25,6 +25,9 @@ local OFFSET_ALTEZZA = 3
 -- Cooldown tra teleport dello stesso player (in secondi)
 local COOLDOWN = 2
 
+-- Salva il checkpoint quando ti teleporti (true/false)
+local SALVA_CHECKPOINT = true
+
 -- ============================================
 -- CODICE PRINCIPALE (Non modificare se non sai cosa stai facendo)
 -- ============================================
@@ -32,6 +35,7 @@ local COOLDOWN = 2
 local partTeleport = script.Parent
 local destinazione = nil
 local playerCooldowns = {}
+local spawnLocation = nil
 
 -- Funzione per trovare la destinazione
 local function trovaDestinazione()
@@ -48,6 +52,33 @@ local function trovaDestinazione()
 	end
 
 	return nil
+end
+
+-- Funzione per creare o trovare lo SpawnLocation
+local function creaSpawnLocation()
+	if not SALVA_CHECKPOINT or not destinazione then
+		return nil
+	end
+
+	-- Se la destinazione è già uno SpawnLocation, usala
+	if destinazione:IsA("SpawnLocation") then
+		return destinazione
+	end
+
+	-- Altrimenti crea uno SpawnLocation invisibile
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "TeleportCheckpoint_" .. partTeleport.Name
+	spawn.Size = destinazione.Size
+	spawn.CFrame = destinazione.CFrame
+	spawn.Transparency = 1
+	spawn.CanCollide = false
+	spawn.Anchored = true
+	spawn.Duration = 0
+	spawn.Enabled = true
+	spawn.Neutral = true
+	spawn.Parent = workspace
+
+	return spawn
 end
 
 -- Funzione per verificare il cooldown
@@ -90,6 +121,11 @@ local function teleportPlayer(character)
 	-- Teletrasporta il player
 	humanoidRootPart.CFrame = CFrame.new(posizioneDestinazione)
 
+	-- Salva il checkpoint se abilitato
+	if SALVA_CHECKPOINT and spawnLocation then
+		player.RespawnLocation = spawnLocation
+	end
+
 	-- Aggiorna il cooldown
 	playerCooldowns[player.UserId] = tick()
 
@@ -120,6 +156,14 @@ if not destinazione then
 	warn("Assicurati che esista una part chiamata '" .. NOME_DESTINAZIONE .. "' nel Workspace")
 else
 	print("✓ Teleport configurato correttamente: " .. partTeleport.Name .. " → " .. destinazione.Name)
+
+	-- Crea lo SpawnLocation se il checkpoint è abilitato
+	if SALVA_CHECKPOINT then
+		spawnLocation = creaSpawnLocation()
+		if spawnLocation then
+			print("✓ Checkpoint salvato alla destinazione")
+		end
+	end
 end
 
 -- Collega l'evento Touched alla funzione onTouch
