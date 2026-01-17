@@ -1,7 +1,9 @@
 --[[
     GLOBALLEADERBOARDMANAGER.LUA
-    Gestisce la leaderboard globale Top 100 usando OrderedDataStore
-    Mostra classifica AFK Time e Cash con avatar dei player
+    Gestisce 3 leaderboard globali Top 100 usando OrderedDataStore:
+    - AFK Time
+    - Cash
+    - Robux Spent
 ]]
 
 local DataStoreService = game:GetService("DataStoreService")
@@ -13,23 +15,30 @@ local GlobalLeaderboardManager = {}
 -- OrderedDataStores
 local AFKTimeLeaderboard = DataStoreService:GetOrderedDataStore("GlobalLeaderboard_AFKTime")
 local CashLeaderboard = DataStoreService:GetOrderedDataStore("GlobalLeaderboard_Cash")
+local RobuxSpentLeaderboard = DataStoreService:GetOrderedDataStore("GlobalLeaderboard_RobuxSpent")
 
 -- Cache
 local CachedAFKTop100 = {}
 local CachedCashTop100 = {}
+local CachedRobuxSpentTop100 = {}
 local LastUpdate = 0
 
 -- ==================== UPDATE PLAYER SCORE ====================
 
-function GlobalLeaderboardManager.UpdatePlayerScore(userId, afkTime, cash)
+function GlobalLeaderboardManager.UpdatePlayerScore(userId, playerName, afkTime, cash, robuxSpent)
     -- Update AFK Time leaderboard
     pcall(function()
-        AFKTimeLeaderboard:SetAsync(tostring(userId), math.floor(afkTime))
+        AFKTimeLeaderboard:SetAsync(tostring(userId), math.floor(afkTime or 0))
     end)
 
     -- Update Cash leaderboard
     pcall(function()
-        CashLeaderboard:SetAsync(tostring(userId), math.floor(cash))
+        CashLeaderboard:SetAsync(tostring(userId), math.floor(cash or 0))
+    end)
+
+    -- Update RobuxSpent leaderboard
+    pcall(function()
+        RobuxSpentLeaderboard:SetAsync(tostring(userId), math.floor(robuxSpent or 0))
     end)
 end
 
@@ -105,6 +114,41 @@ function GlobalLeaderboardManager.FetchTop100Cash()
     return top100
 end
 
+function GlobalLeaderboardManager.FetchTop100RobuxSpent()
+    local success, pages = pcall(function()
+        return RobuxSpentLeaderboard:GetSortedAsync(false, 100)
+    end)
+
+    if not success then
+        warn("[GlobalLeaderboard] Errore nel fetch top 100 RobuxSpent")
+        return CachedRobuxSpentTop100
+    end
+
+    local top100 = {}
+    local entries = pages:GetCurrentPage()
+
+    for rank, entry in ipairs(entries) do
+        local userId = tonumber(entry.key)
+        local robuxSpent = entry.value
+
+        -- Fetch username
+        local username = "Unknown"
+        pcall(function()
+            username = Players:GetNameFromUserIdAsync(userId)
+        end)
+
+        table.insert(top100, {
+            Rank = rank,
+            UserId = userId,
+            Username = username,
+            Score = robuxSpent
+        })
+    end
+
+    CachedRobuxSpentTop100 = top100
+    return top100
+end
+
 -- ==================== GET CACHED ====================
 
 function GlobalLeaderboardManager.GetCachedTop100AFK()
@@ -113,6 +157,10 @@ end
 
 function GlobalLeaderboardManager.GetCachedTop100Cash()
     return CachedCashTop100
+end
+
+function GlobalLeaderboardManager.GetCachedTop100RobuxSpent()
+    return CachedRobuxSpentTop100
 end
 
 -- ==================== UPDATE LOOP ====================
@@ -131,6 +179,10 @@ function GlobalLeaderboardManager.StartUpdateLoop()
 
             spawn(function()
                 GlobalLeaderboardManager.FetchTop100Cash()
+            end)
+
+            spawn(function()
+                GlobalLeaderboardManager.FetchTop100RobuxSpent()
             end)
 
             LastUpdate = tick()
@@ -163,6 +215,16 @@ function GlobalLeaderboardManager.FormatCash(cash)
         return string.format("%.1fK", cash / 1000)
     else
         return tostring(math.floor(cash))
+    end
+end
+
+function GlobalLeaderboardManager.FormatRobux(robux)
+    if robux >= 1000000 then
+        return string.format("%.1fM R$", robux / 1000000)
+    elseif robux >= 1000 then
+        return string.format("%.1fK R$", robux / 1000)
+    else
+        return tostring(math.floor(robux)) .. " R$"
     end
 end
 
