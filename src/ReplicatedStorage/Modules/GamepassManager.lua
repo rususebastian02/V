@@ -152,6 +152,15 @@ function GamepassManager.GetGamepassInfo(gamepassKey)
     return Config.Gamepasses[gamepassKey]
 end
 
+function GamepassManager.GetGamepassByID(gamepassId)
+    for key, gamepass in pairs(Config.Gamepasses) do
+        if gamepass.ID == gamepassId then
+            return gamepass
+        end
+    end
+    return nil
+end
+
 function GamepassManager.GetAllGamepasses()
     return Config.Gamepasses
 end

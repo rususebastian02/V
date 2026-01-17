@@ -234,8 +234,12 @@ RequestDataFunction.OnServerInvoke = function(player)
 
     return {
         Cash = profile:Get("Cash"),
-        AFKTime = profile:Get("TotalAFKTime"),
-        Rank = profile:Get("CurrentRank"),
+        TotalAFKTime = profile:Get("TotalAFKTime"),
+        AFKTime = profile:Get("TotalAFKTime"), -- Backwards compatibility
+        CurrentRank = profile:Get("CurrentRank"),
+        Rank = profile:Get("CurrentRank"), -- Backwards compatibility
+        FirstJoin = profile:Get("FirstJoin"),
+        RobuxSpent = profile:Get("RobuxSpent"),
         Income = CashManager.GetCurrentIncome(player, profile, serverBoostMultiplier),
         Gamepasses = profile:Get("Gamepasses"),
         ServerBoost = BoostManager.GetBoostInfo()
@@ -250,6 +254,14 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, gamep
         local profile = DataManager.GetProfile(player)
         if profile then
             GamepassManager.OnGamepassPurchased(player, profile, gamepassId)
+
+            -- Track RobuxSpent
+            local gamepassInfo = GamepassManager.GetGamepassByID(gamepassId)
+            if gamepassInfo and gamepassInfo.Price then
+                profile:Increment("RobuxSpent", gamepassInfo.Price)
+                GlobalLeaderboardManager.UpdatePlayerScore(player.UserId, player.Name, profile:Get("TotalAFKTime"), profile:Get("Cash"), profile:Get("RobuxSpent"))
+                print(string.format("[MainServer] %s ha speso %d Robux (gamepass)", player.Name, gamepassInfo.Price))
+            end
         end
     end
 end)
@@ -283,6 +295,17 @@ DevProductsManager.SetInstantCashHandler(function(player, amount)
     CashManager.AddCash(player, profile, amount)
     VisualEffectsManager.PlayCashEffect(player, amount)
     print(string.format("[MainServer] %s ha ricevuto %d cash istantanei", player.Name, amount))
+end)
+
+-- Donation Handler
+DevProductsManager.SetDonationHandler(function(player, amount)
+    local profile = DataManager.GetProfile(player)
+    if not profile then return end
+
+    -- Track RobuxSpent
+    profile:Increment("RobuxSpent", amount)
+    GlobalLeaderboardManager.UpdatePlayerScore(player.UserId, player.Name, profile:Get("TotalAFKTime"), profile:Get("Cash"), profile:Get("RobuxSpent"))
+    print(string.format("[MainServer] %s ha donato %d Robux! Grazie!", player.Name, amount))
 end)
 
 -- ==================== SHUTDOWN HANDLING ====================
