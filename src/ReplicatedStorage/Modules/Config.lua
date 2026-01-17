@@ -118,6 +118,43 @@ Config.DevProducts = {
         Price = 999,
         Amount = 5000000,
         Type = "InstantCash"
+    },
+
+    -- Donazioni
+    Donation10 = {
+        ID = 3513602045,
+        Name = "Donate 10 Robux",
+        Price = 10,
+        Amount = 10,
+        Type = "Donation"
+    },
+    Donation100 = {
+        ID = 3513602192,
+        Name = "Donate 100 Robux",
+        Price = 100,
+        Amount = 100,
+        Type = "Donation"
+    },
+    Donation1K = {
+        ID = 3513602335,
+        Name = "Donate 1.000 Robux",
+        Price = 1000,
+        Amount = 1000,
+        Type = "Donation"
+    },
+    Donation10K = {
+        ID = 3513602509,
+        Name = "Donate 10.000 Robux",
+        Price = 10000,
+        Amount = 10000,
+        Type = "Donation"
+    },
+    Donation100K = {
+        ID = 3513602649,
+        Name = "Donate 100.000 Robux",
+        Price = 100000,
+        Amount = 100000,
+        Type = "Donation"
     }
 }
 
@@ -220,6 +257,8 @@ Config.DefaultPlayerData = {
     Cash = 0,
     TotalAFKTime = 0,
     CurrentRank = "Lazy",
+    FirstJoin = os.time(),
+    RobuxSpent = 0,
     Gamepasses = {
         x2Income = false,
         VIPStatus = false,

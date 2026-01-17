@@ -102,6 +102,8 @@ function DataManager.LoadProfile(player)
     print("[DataManager] Caricamento dati per " .. player.Name)
 
     local data = nil
+    local isNewPlayer = false
+
     local success, errorMessage = pcall(function()
         data = PlayerDataStore:GetAsync("Player_" .. userId)
     end)
@@ -112,24 +114,42 @@ function DataManager.LoadProfile(player)
         data = nil
     end
 
-    -- Se non ci sono dati, usa default
+    -- Se non ci sono dati, usa default (nuovo giocatore)
     if not data then
         print("[DataManager] Nessun dato trovato, uso default per " .. player.Name)
         data = DeepCopy(Config.DefaultPlayerData)
+        isNewPlayer = true
+        -- Imposta FirstJoin per i nuovi giocatori
+        data.FirstJoin = os.time()
+        data.RobuxSpent = 0
     else
         -- Merge con default per nuove chiavi
         local defaultData = DeepCopy(Config.DefaultPlayerData)
         for key, value in pairs(data) do
             defaultData[key] = value
         end
+
+        -- Assicura che FirstJoin esista (per vecchi salvataggi)
+        if not defaultData.FirstJoin then
+            defaultData.FirstJoin = os.time()
+        end
+
+        -- Assicura che RobuxSpent esista (per vecchi salvataggi)
+        if not defaultData.RobuxSpent then
+            defaultData.RobuxSpent = 0
+        end
+
         data = defaultData
     end
+
+    -- Aggiorna LastLogin
+    data.LastLogin = os.time()
 
     -- Crea profilo
     local profile = Profile.new(player, data)
     ProfileCache[userId] = profile
 
-    print("[DataManager] Profilo caricato per " .. player.Name)
+    print("[DataManager] Profilo caricato per " .. player.Name .. (isNewPlayer and " (NUOVO)" or " (ESISTENTE)"))
     return profile
 end
 
