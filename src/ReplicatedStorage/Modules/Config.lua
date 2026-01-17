@@ -235,7 +235,7 @@ Config.Auras = {
 
 -- ==================== LEADERBOARD SETTINGS ====================
 Config.Leaderboard = {
-    UpdateInterval = 300, -- Aggiorna leaderboard globale ogni 5 minuti
+    UpdateInterval = 60, -- Aggiorna leaderboard globale ogni minuto
     Top100Entries = 100,
     LocalUpdateInterval = 5, -- Aggiorna leaderboard locale ogni 5 secondi
 }
