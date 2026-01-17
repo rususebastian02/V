@@ -207,38 +207,61 @@ end
 -- ==================== UPDATE LOOP ====================
 
 spawn(function()
-    -- Initial update
-    task.wait(5)
+    -- Fetch iniziale immediato
+    print("[GlobalLeaderboardDisplay] Fetch iniziale in corso...")
+    GlobalLeaderboardManager.FetchTop100AFK()
+    GlobalLeaderboardManager.FetchTop100Cash()
+    GlobalLeaderboardManager.FetchTop100RobuxSpent()
+
+    -- Initial update dopo fetch
+    task.wait(2)
+
+    local afkTop100 = GlobalLeaderboardManager.GetCachedTop100AFK()
+    local cashTop100 = GlobalLeaderboardManager.GetCachedTop100Cash()
+    local robuxSpentTop100 = GlobalLeaderboardManager.GetCachedTop100RobuxSpent()
+
+    print("[GlobalLeaderboardDisplay] AFK entries: " .. #afkTop100)
+    print("[GlobalLeaderboardDisplay] Cash entries: " .. #cashTop100)
+    print("[GlobalLeaderboardDisplay] RobuxSpent entries: " .. #robuxSpentTop100)
 
     while true do
         -- Fetch leaderboards
-        local afkTop100 = GlobalLeaderboardManager.GetCachedTop100AFK()
-        local cashTop100 = GlobalLeaderboardManager.GetCachedTop100Cash()
-        local robuxSpentTop100 = GlobalLeaderboardManager.GetCachedTop100RobuxSpent()
+        afkTop100 = GlobalLeaderboardManager.GetCachedTop100AFK()
+        cashTop100 = GlobalLeaderboardManager.GetCachedTop100Cash()
+        robuxSpentTop100 = GlobalLeaderboardManager.GetCachedTop100RobuxSpent()
 
         -- Update displays (with nil check)
         if afkTop100 and #afkTop100 > 0 then
+            print("[GlobalLeaderboardDisplay] Aggiornamento AFK con " .. #afkTop100 .. " entries")
             UpdateLeaderboardDisplay(
                 AFKScrollFrame,
                 afkTop100,
                 GlobalLeaderboardManager.FormatAFKTime
             )
+        else
+            print("[GlobalLeaderboardDisplay] AFK leaderboard vuota")
         end
 
         if cashTop100 and #cashTop100 > 0 then
+            print("[GlobalLeaderboardDisplay] Aggiornamento Cash con " .. #cashTop100 .. " entries")
             UpdateLeaderboardDisplay(
                 CashScrollFrame,
                 cashTop100,
                 GlobalLeaderboardManager.FormatCash
             )
+        else
+            print("[GlobalLeaderboardDisplay] Cash leaderboard vuota")
         end
 
         if robuxSpentTop100 and #robuxSpentTop100 > 0 then
+            print("[GlobalLeaderboardDisplay] Aggiornamento RobuxSpent con " .. #robuxSpentTop100 .. " entries")
             UpdateLeaderboardDisplay(
                 RobuxSpentScrollFrame,
                 robuxSpentTop100,
                 GlobalLeaderboardManager.FormatRobux
             )
+        else
+            print("[GlobalLeaderboardDisplay] RobuxSpent leaderboard vuota")
         end
 
         -- Wait for next update

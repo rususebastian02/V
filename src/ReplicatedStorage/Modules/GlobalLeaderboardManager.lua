@@ -62,10 +62,17 @@ function GlobalLeaderboardManager.FetchTop100AFK()
         local afkTime = entry.value
 
         -- Fetch username
-        local username = "Unknown"
-        pcall(function()
-            username = Players:GetNameFromUserIdAsync(userId)
+        local username = "Player_" .. userId
+        local success, fetchedName = pcall(function()
+            return Players:GetNameFromUserIdAsync(userId)
         end)
+
+        if success and fetchedName then
+            username = fetchedName
+            print("[GlobalLeaderboard] Fetched username for " .. userId .. ": " .. username)
+        else
+            warn("[GlobalLeaderboard] Fallito fetch username per userId: " .. userId)
+        end
 
         table.insert(top100, {
             Rank = rank,
@@ -97,10 +104,16 @@ function GlobalLeaderboardManager.FetchTop100Cash()
         local cash = entry.value
 
         -- Fetch username
-        local username = "Unknown"
-        pcall(function()
-            username = Players:GetNameFromUserIdAsync(userId)
+        local username = "Player_" .. userId
+        local success, fetchedName = pcall(function()
+            return Players:GetNameFromUserIdAsync(userId)
         end)
+
+        if success and fetchedName then
+            username = fetchedName
+        else
+            warn("[GlobalLeaderboard] Fallito fetch username per userId: " .. userId)
+        end
 
         table.insert(top100, {
             Rank = rank,
@@ -132,10 +145,16 @@ function GlobalLeaderboardManager.FetchTop100RobuxSpent()
         local robuxSpent = entry.value
 
         -- Fetch username
-        local username = "Unknown"
-        pcall(function()
-            username = Players:GetNameFromUserIdAsync(userId)
+        local username = "Player_" .. userId
+        local success, fetchedName = pcall(function()
+            return Players:GetNameFromUserIdAsync(userId)
         end)
+
+        if success and fetchedName then
+            username = fetchedName
+        else
+            warn("[GlobalLeaderboard] Fallito fetch username per userId: " .. userId)
+        end
 
         table.insert(top100, {
             Rank = rank,
