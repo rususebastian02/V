@@ -41,6 +41,7 @@ end
 -- Trova o crea le parti
 local AFKLeaderboardPart = FindOrCreateLeaderboardPart("GlobalLeaderboard_AFK", Vector3.new(0, 20, -50))
 local CashLeaderboardPart = FindOrCreateLeaderboardPart("GlobalLeaderboard_Cash", Vector3.new(25, 20, -50))
+local RobuxSpentLeaderboardPart = FindOrCreateLeaderboardPart("GlobalLeaderboard_RobuxSpent", Vector3.new(50, 20, -50))
 
 -- ==================== CREA SURFACE GUI ====================
 
@@ -98,6 +99,7 @@ end
 
 local AFKGui, AFKScrollFrame = CreateSurfaceGUI(AFKLeaderboardPart, "🏆 TOP 100 AFK TIME 🏆")
 local CashGui, CashScrollFrame = CreateSurfaceGUI(CashLeaderboardPart, "💰 TOP 100 CASH 💰")
+local RobuxSpentGui, RobuxSpentScrollFrame = CreateSurfaceGUI(RobuxSpentLeaderboardPart, "💎 TOP 100 ROBUX SPENT 💎")
 
 -- ==================== UPDATE LEADERBOARD DISPLAY ====================
 
@@ -175,6 +177,12 @@ local function UpdateLeaderboardDisplay(scrollFrame, entries, formatFunction)
         end
     end
 
+    -- Check if entries is nil or empty
+    if not entries or #entries == 0 then
+        print("[GlobalLeaderboardDisplay] Nessuna entry disponibile")
+        return
+    end
+
     -- Create new entries
     for _, entry in ipairs(entries) do
         local scoreText = formatFunction(entry.Score)
@@ -206,9 +214,10 @@ spawn(function()
         -- Fetch leaderboards
         local afkTop100 = GlobalLeaderboardManager.GetCachedTop100AFK()
         local cashTop100 = GlobalLeaderboardManager.GetCachedTop100Cash()
+        local robuxSpentTop100 = GlobalLeaderboardManager.GetCachedTop100RobuxSpent()
 
-        -- Update displays
-        if #afkTop100 > 0 then
+        -- Update displays (with nil check)
+        if afkTop100 and #afkTop100 > 0 then
             UpdateLeaderboardDisplay(
                 AFKScrollFrame,
                 afkTop100,
@@ -216,11 +225,19 @@ spawn(function()
             )
         end
 
-        if #cashTop100 > 0 then
+        if cashTop100 and #cashTop100 > 0 then
             UpdateLeaderboardDisplay(
                 CashScrollFrame,
                 cashTop100,
                 GlobalLeaderboardManager.FormatCash
+            )
+        end
+
+        if robuxSpentTop100 and #robuxSpentTop100 > 0 then
+            UpdateLeaderboardDisplay(
+                RobuxSpentScrollFrame,
+                robuxSpentTop100,
+                GlobalLeaderboardManager.FormatRobux
             )
         end
 

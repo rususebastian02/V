@@ -103,6 +103,17 @@ end
 
 -- ==================== POPULATE DEV PRODUCTS ====================
 
+-- Format number helper (deve essere definito prima di CreateDevProductButton)
+local function FormatNumber(num)
+    if num >= 1000000 then
+        return string.format("%.1fM", num / 1000000)
+    elseif num >= 1000 then
+        return string.format("%.1fK", num / 1000)
+    else
+        return tostring(num)
+    end
+end
+
 local function CreateDevProductButton(productKey, productInfo, parent)
     local button = Instance.new("TextButton")
     button.Name = productKey .. "Button"
@@ -136,16 +147,6 @@ local function CreateDevProductButton(productKey, productInfo, parent)
     return button
 end
 
-local function FormatNumber(num)
-    if num >= 1000000 then
-        return string.format("%.1fM", num / 1000000)
-    elseif num >= 1000 then
-        return string.format("%.1fK", num / 1000)
-    else
-        return tostring(num)
-    end
-end
-
 -- Crea bottoni dev products
 local devProductsContainer = DevProductsFrame:WaitForChild("Container")
 local devProductsList = Instance.new("UIListLayout")
@@ -153,7 +154,10 @@ devProductsList.Padding = UDim.new(0, 10)
 devProductsList.Parent = devProductsContainer
 
 for key, info in pairs(Config.DevProducts) do
-    CreateDevProductButton(key, info, devProductsContainer)
+    -- Escludi le donazioni (hanno la loro GUI separata)
+    if info.Type ~= "Donation" then
+        CreateDevProductButton(key, info, devProductsContainer)
+    end
 end
 
-print("[ShopGUI] Shop popolato con prodotti")
+print("[ShopGUI] Shop inizializzato correttamente!")

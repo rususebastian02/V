@@ -16,7 +16,8 @@ local DevProductsManager = {}
 local Handlers = {
     OnServerBoostActivated = nil,
     OnSkipRank = nil,
-    OnInstantCash = nil
+    OnInstantCash = nil,
+    OnDonation = nil
 }
 
 -- ==================== PROCESS RECEIPT ====================
@@ -53,6 +54,11 @@ function DevProductsManager.ProcessReceipt(receiptInfo)
         if Handlers.OnInstantCash then
             Handlers.OnInstantCash(player, product.Amount)
         end
+
+    elseif product.Type == "Donation" then
+        if Handlers.OnDonation then
+            Handlers.OnDonation(player, product.Amount)
+        end
     end
 
     return Enum.ProductPurchaseDecision.PurchaseGranted
@@ -70,6 +76,10 @@ end
 
 function DevProductsManager.SetInstantCashHandler(handler)
     Handlers.OnInstantCash = handler
+end
+
+function DevProductsManager.SetDonationHandler(handler)
+    Handlers.OnDonation = handler
 end
 
 -- ==================== PROMPT PURCHASE ====================
