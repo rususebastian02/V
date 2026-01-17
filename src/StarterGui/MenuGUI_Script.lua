@@ -74,6 +74,11 @@ local function FormatDate(timestamp)
 end
 
 local function FormatTime(seconds)
+    -- Gestisci caso nil
+    if not seconds or seconds == 0 then
+        return "0sec"
+    end
+
     local days = math.floor(seconds / 86400)
     local hours = math.floor((seconds % 86400) / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
@@ -119,21 +124,24 @@ function UpdateProfileData()
     -- Username
     container:WaitForChild("UsernameLabel").Text = "Username: " .. player.Name
 
-    -- First Join
+    -- First Join (con controllo nil)
     local firstJoinDate = data.FirstJoin and FormatDate(data.FirstJoin) or "N/A"
     container:WaitForChild("FirstJoinLabel").Text = "First Join: " .. firstJoinDate
 
-    -- Total Cash
-    container:WaitForChild("CashLabel").Text = "Total Cash: " .. FormatNumber(data.Cash)
+    -- Total Cash (con controllo nil)
+    local cashValue = data.Cash or 0
+    container:WaitForChild("CashLabel").Text = "Total Cash: " .. FormatNumber(cashValue)
 
-    -- AFK Time
-    container:WaitForChild("AFKTimeLabel").Text = "AFK Time: " .. FormatTime(data.TotalAFKTime)
+    -- AFK Time (con controllo nil)
+    local afkTime = data.TotalAFKTime or 0
+    container:WaitForChild("AFKTimeLabel").Text = "AFK Time: " .. FormatTime(afkTime)
 
-    -- Rank
+    -- Rank (con controllo nil)
     container:WaitForChild("RankLabel").Text = "Rank: " .. (data.CurrentRank or "Lazy")
 
-    -- Robux Spent
-    container:WaitForChild("RobuxSpentLabel").Text = "Robux Spent: " .. (data.RobuxSpent or 0) .. " R$"
+    -- Robux Spent (con controllo nil)
+    local robuxSpent = data.RobuxSpent or 0
+    container:WaitForChild("RobuxSpentLabel").Text = "Robux Spent: " .. robuxSpent .. " R$"
 
     print("[MenuGUI] Profile data aggiornati")
 end
