@@ -4,7 +4,7 @@
 	Complete shop system with tabs:
 	- System Re-write (Gamepass)
 	- Logs (Dev Products)
-	- Support Logs (Donations + Custom)
+	- Support Logs (Donations)
 
 	Place this script in StarterPlayer > StarterPlayerScripts
 ]]
@@ -35,9 +35,6 @@ local PRODUCTS = {
 	DONATION_25 = 3518100838,
 	DONATION_50 = 3518100909
 }
-
--- Custom donation product ID (you need to create this one separately)
-local CUSTOM_DONATION_ID = 0 -- Replace with your custom donation product ID
 
 -- ========================================
 -- MAIN SCREEN GUI
@@ -163,26 +160,23 @@ contentFrame.Parent = shopFrame
 
 local function clearContent()
 	for _, child in ipairs(contentFrame:GetChildren()) do
-		if not child:IsA("UIListLayout") then
-			child:Destroy()
-		end
+		child:Destroy()
 	end
 end
 
 local function createUIListLayout()
-	if not contentFrame:FindFirstChild("UIListLayout") then
-		local layout = Instance.new("UIListLayout")
-		layout.Padding = UDim.new(0, 10)
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Parent = contentFrame
-	end
-end
+	local layout = Instance.new("UIListLayout")
+	layout.Name = "ListLayout"
+	layout.Padding = UDim.new(0, 10)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = contentFrame
 
-local function updateCanvasSize()
-	local layout = contentFrame:FindFirstChild("UIListLayout")
-	if layout then
+	-- Auto-update canvas size when layout changes
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		contentFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-	end
+	end)
+
+	return layout
 end
 
 local function setActiveTab(activeButton)
@@ -205,16 +199,17 @@ end
 
 local function showSystemRewrite()
 	clearContent()
-	createUIListLayout()
+	local layout = createUIListLayout()
 	setActiveTab(systemTab)
 
 	-- Gamepass container
 	local gamepassFrame = Instance.new("Frame")
 	gamepassFrame.Name = "GamepassFrame"
-	gamepassFrame.Size = UDim2.new(1, -20, 0, 200)
+	gamepassFrame.Size = UDim2.new(1, 0, 0, 200)
 	gamepassFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	gamepassFrame.BorderSizePixel = 1
 	gamepassFrame.BorderColor3 = Color3.fromRGB(60, 60, 60)
+	gamepassFrame.LayoutOrder = 1
 	gamepassFrame.Parent = contentFrame
 
 	-- Gamepass image
@@ -282,21 +277,20 @@ local function showSystemRewrite()
 	buyButton.MouseButton1Click:Connect(function()
 		MarketplaceService:PromptGamePassPurchase(player, GAMEPASS_SILENCE)
 	end)
-
-	updateCanvasSize()
 end
 
 -- ========================================
 -- LOGS TAB (Dev Products)
 -- ========================================
 
-local function createProductCard(name, description, price, productId, yOffset)
+local function createProductCard(name, description, price, productId, order)
 	local card = Instance.new("Frame")
 	card.Name = name
-	card.Size = UDim2.new(1, -20, 0, 100)
+	card.Size = UDim2.new(1, 0, 0, 100)
 	card.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	card.BorderSizePixel = 1
 	card.BorderColor3 = Color3.fromRGB(60, 60, 60)
+	card.LayoutOrder = order
 	card.Parent = contentFrame
 
 	local nameLabel = Instance.new("TextLabel")
@@ -354,38 +348,40 @@ end
 
 local function showLogs()
 	clearContent()
-	createUIListLayout()
+	local layout = createUIListLayout()
 	setActiveTab(logsTab)
 
 	createProductCard(
 		"Acknowledged",
 		"One-time acknowledgement. No other effects.",
 		29,
-		PRODUCTS.ACKNOWLEDGED
+		PRODUCTS.ACKNOWLEDGED,
+		1
 	)
 
 	createProductCard(
 		"View Partial Log",
 		"View your session log. Some entries unavailable.",
 		59,
-		PRODUCTS.VIEW_LOG
+		PRODUCTS.VIEW_LOG,
+		2
 	)
 
 	createProductCard(
 		"System Load",
 		"Increases system load. No visible effects.",
 		25,
-		PRODUCTS.SYSTEM_LOAD
+		PRODUCTS.SYSTEM_LOAD,
+		3
 	)
 
 	createProductCard(
 		"Why",
 		"Why?",
 		9,
-		PRODUCTS.WHY
+		PRODUCTS.WHY,
+		4
 	)
-
-	updateCanvasSize()
 end
 
 -- ========================================
@@ -394,18 +390,19 @@ end
 
 local function showSupportLogs()
 	clearContent()
-	createUIListLayout()
+	local layout = createUIListLayout()
 	setActiveTab(supportTab)
 
 	-- Header
 	local header = Instance.new("TextLabel")
-	header.Size = UDim2.new(1, -20, 0, 30)
+	header.Size = UDim2.new(1, 0, 0, 30)
 	header.BackgroundTransparency = 1
 	header.Text = "This action has no effect on your session."
 	header.TextColor3 = Color3.fromRGB(150, 150, 150)
 	header.TextSize = 14
 	header.Font = Enum.Font.Code
 	header.TextWrapped = true
+	header.LayoutOrder = 0
 	header.Parent = contentFrame
 
 	-- Fixed donations
@@ -413,111 +410,33 @@ local function showSupportLogs()
 		"Support Logging (R$5)",
 		"This action has no effect on your session.",
 		5,
-		PRODUCTS.DONATION_5
+		PRODUCTS.DONATION_5,
+		1
 	)
 
 	createProductCard(
 		"Support Logging (R$10)",
 		"This action has no effect on your session.",
 		10,
-		PRODUCTS.DONATION_10
+		PRODUCTS.DONATION_10,
+		2
 	)
 
 	createProductCard(
 		"Support Logging (R$25)",
 		"This action has no effect on your session.",
 		25,
-		PRODUCTS.DONATION_25
+		PRODUCTS.DONATION_25,
+		3
 	)
 
 	createProductCard(
 		"Support Logging (R$50)",
 		"This action has no effect on your session.",
 		50,
-		PRODUCTS.DONATION_50
+		PRODUCTS.DONATION_50,
+		4
 	)
-
-	-- Custom donation section
-	local customFrame = Instance.new("Frame")
-	customFrame.Name = "CustomDonation"
-	customFrame.Size = UDim2.new(1, -20, 0, 120)
-	customFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	customFrame.BorderSizePixel = 1
-	customFrame.BorderColor3 = Color3.fromRGB(80, 80, 80)
-	customFrame.Parent = contentFrame
-
-	local customTitle = Instance.new("TextLabel")
-	customTitle.Size = UDim2.new(1, -20, 0, 25)
-	customTitle.Position = UDim2.new(0, 10, 0, 10)
-	customTitle.BackgroundTransparency = 1
-	customTitle.Text = "Custom Donation"
-	customTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
-	customTitle.TextSize = 18
-	customTitle.Font = Enum.Font.CodeBold
-	customTitle.TextXAlignment = Enum.TextXAlignment.Left
-	customTitle.Parent = customFrame
-
-	local customDesc = Instance.new("TextLabel")
-	customDesc.Size = UDim2.new(1, -20, 0, 30)
-	customDesc.Position = UDim2.new(0, 10, 0, 35)
-	customDesc.BackgroundTransparency = 1
-	customDesc.Text = "Enter custom amount (this feature requires a developer product)"
-	customDesc.TextColor3 = Color3.fromRGB(180, 180, 180)
-	customDesc.TextSize = 12
-	customDesc.Font = Enum.Font.Code
-	customDesc.TextXAlignment = Enum.TextXAlignment.Left
-	customDesc.TextWrapped = true
-	customDesc.Parent = customFrame
-
-	local amountInput = Instance.new("TextBox")
-	amountInput.Size = UDim2.new(0, 150, 0, 30)
-	amountInput.Position = UDim2.new(0, 10, 0, 75)
-	amountInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	amountInput.BorderSizePixel = 1
-	amountInput.BorderColor3 = Color3.fromRGB(80, 80, 80)
-	amountInput.PlaceholderText = "Amount (Robux)"
-	amountInput.Text = ""
-	amountInput.TextColor3 = Color3.fromRGB(220, 220, 220)
-	amountInput.TextSize = 14
-	amountInput.Font = Enum.Font.Code
-	amountInput.ClearTextOnFocus = false
-	amountInput.Parent = customFrame
-
-	local donateButton = Instance.new("TextButton")
-	donateButton.Size = UDim2.new(0, 110, 0, 30)
-	donateButton.Position = UDim2.new(0, 170, 0, 75)
-	donateButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-	donateButton.BorderSizePixel = 0
-	donateButton.Text = "Donate"
-	donateButton.TextColor3 = Color3.fromRGB(220, 220, 220)
-	donateButton.TextSize = 14
-	donateButton.Font = Enum.Font.Code
-	donateButton.Parent = customFrame
-
-	donateButton.MouseButton1Click:Connect(function()
-		local amount = tonumber(amountInput.Text)
-		if amount and amount > 0 then
-			-- Request custom donation from server
-			local CustomDonateFunction = game:GetService("ReplicatedStorage"):WaitForChild("CustomDonate", 2)
-			if CustomDonateFunction then
-				local result = CustomDonateFunction:InvokeServer(amount)
-				if result.success then
-					MarketplaceService:PromptProductPurchase(player, result.productId)
-					if result.actualAmount ~= amount then
-						warn("Closest donation tier: " .. result.actualAmount .. " Robux")
-					end
-				else
-					warn(result.message)
-				end
-			else
-				warn("Custom donation system not available")
-			end
-		else
-			warn("Please enter a valid amount")
-		end
-	end)
-
-	updateCanvasSize()
 end
 
 -- ========================================
@@ -542,15 +461,6 @@ end
 shopButton.MouseButton1Click:Connect(toggleShop)
 closeButton.MouseButton1Click:Connect(function()
 	shopFrame.Visible = false
-end)
-
--- ========================================
--- AUTO-UPDATE CANVAS SIZE
--- ========================================
-
-contentFrame.ChildAdded:Connect(function()
-	task.wait(0.1)
-	updateCanvasSize()
 end)
 
 print("Minimalist Game Room - Shop GUI Loaded")
