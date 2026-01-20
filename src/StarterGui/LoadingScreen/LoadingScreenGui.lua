@@ -3,9 +3,12 @@
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
 -- Configuration
 local TOTAL_WAIT_TIME = 1200 -- 20 minutes in seconds
@@ -77,7 +80,42 @@ screenGui.Name = "InfiniteLoadingScreen"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 100
+screenGui.IgnoreGuiInset = true -- Cover the entire screen including topbar
 screenGui.Parent = playerGui
+
+-- Disable player movement but keep chat enabled
+local originalWalkSpeed = humanoid.WalkSpeed
+local originalJumpPower = humanoid.JumpPower
+
+humanoid.WalkSpeed = 0
+humanoid.JumpPower = 0
+
+-- Disable core GUI elements except chat
+pcall(function()
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu, false)
+end)
+
+-- Function to re-enable controls (in case player dies during loading)
+local function reEnableControls()
+	if humanoid then
+		humanoid.WalkSpeed = originalWalkSpeed
+		humanoid.JumpPower = originalJumpPower
+	end
+	pcall(function()
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, true)
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, true)
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.EmotesMenu, true)
+	end)
+end
+
+-- Re-enable controls if player dies
+humanoid.Died:Connect(function()
+	reEnableControls()
+end)
 
 -- Main background frame (black)
 local mainFrame = Instance.new("Frame")
@@ -271,6 +309,9 @@ task.spawn(function()
 
 	task.wait(1.5)
 	mainFrame.Visible = false
+
+	-- Re-enable player controls
+	reEnableControls()
 
 	-- Show the congratulations screen
 	showCongratulationsScreen()
