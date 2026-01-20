@@ -234,7 +234,7 @@ local function showSystemRewrite()
 	nameLabel.Text = "Silence"
 	nameLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 	nameLabel.TextSize = 20
-	nameLabel.Font = Enum.Font.CodeBold
+	nameLabel.Font = Enum.Font.Code
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = gamepassFrame
 
@@ -300,7 +300,7 @@ local function createProductCard(name, description, price, productId, order)
 	nameLabel.Text = name
 	nameLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 	nameLabel.TextSize = 18
-	nameLabel.Font = Enum.Font.CodeBold
+	nameLabel.Font = Enum.Font.Code
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.Parent = card
 

@@ -59,7 +59,7 @@ messageLabel.Font = Enum.Font.Code
 messageLabel.TextTransparency = 1
 messageLabel.TextWrapped = true
 messageLabel.TextXAlignment = Enum.TextXAlignment.Center
-messageLabel.TextYAlignment = Enum.TextYAlignment.Middle
+messageLabel.TextYAlignment = Enum.TextYAlignment.Center
 messageLabel.Parent = messageContainer
 
 -- Leave button (hidden by default)
@@ -115,7 +115,7 @@ returnLabel.Font = Enum.Font.Code
 returnLabel.TextTransparency = 1
 returnLabel.TextWrapped = true
 returnLabel.TextXAlignment = Enum.TextXAlignment.Center
-returnLabel.TextYAlignment = Enum.TextYAlignment.Middle
+returnLabel.TextYAlignment = Enum.TextYAlignment.Center
 returnLabel.Parent = returnContainer
 
 -- Helper: Fade text in
