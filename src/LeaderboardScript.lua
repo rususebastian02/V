@@ -60,6 +60,20 @@ subtitle.TextSize = 16
 subtitle.Font = Enum.Font.Code
 subtitle.Parent = mainFrame
 
+-- Status message (for debugging/empty state)
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "StatusLabel"
+statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
+statusLabel.Position = UDim2.new(0, 0, 0.25, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Loading..."
+statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+statusLabel.TextSize = 18
+statusLabel.Font = Enum.Font.Code
+statusLabel.TextWrapped = true
+statusLabel.Visible = true
+statusLabel.Parent = mainFrame
+
 -- Scrolling frame for entries
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Name = "ScrollFrame"
@@ -69,7 +83,20 @@ scrollFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 scrollFrame.BorderSizePixel = 0
 scrollFrame.ScrollBarThickness = 6
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.Visible = false
 scrollFrame.Parent = mainFrame
+
+-- UIListLayout for automatic positioning
+local listLayout = Instance.new("UIListLayout")
+listLayout.Name = "ListLayout"
+listLayout.Padding = UDim.new(0, 5)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Parent = scrollFrame
+
+-- Auto-update canvas size
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+end)
 
 -- Helper: Format time
 local function formatTime(seconds)
@@ -90,19 +117,26 @@ end
 Players.PlayerRemoving:Connect(function(player)
 	task.wait(2) -- Wait for data to save
 
-	pcall(function()
+	local success, errorMsg = pcall(function()
 		local userId = "Player_" .. player.UserId
 		local data = PlayerDataStore:GetAsync(userId)
 
-		if data and data.totalTime then
+		if data and data.totalTime and data.totalTime > 0 then
 			-- Update ordered data store
 			LeaderboardStore:SetAsync(player.Name, data.totalTime)
+			print("[Leaderboard] Updated:", player.Name, "with", data.totalTime, "seconds")
 		end
 	end)
+
+	if not success then
+		warn("[Leaderboard] Failed to update player data:", errorMsg)
+	end
 end)
 
 -- Update leaderboard display
 local function updateLeaderboard()
+	print("[Leaderboard] Updating display...")
+
 	-- Clear existing entries
 	for _, child in ipairs(scrollFrame:GetChildren()) do
 		if child:IsA("Frame") then
@@ -116,20 +150,37 @@ local function updateLeaderboard()
 	end)
 
 	if not success then
-		warn("Failed to fetch leaderboard data")
+		statusLabel.Text = "DataStore not available.\n(Works only in published games)"
+		statusLabel.Visible = true
+		scrollFrame.Visible = false
+		warn("[Leaderboard] Failed to fetch data - DataStore not available")
 		return
 	end
 
 	local entries = pages:GetCurrentPage()
-	local yOffset = 0
 
+	if #entries == 0 then
+		statusLabel.Text = "No data yet.\nWait for players to leave the game."
+		statusLabel.Visible = true
+		scrollFrame.Visible = false
+		print("[Leaderboard] No entries found")
+		return
+	end
+
+	-- Hide status, show leaderboard
+	statusLabel.Visible = false
+	scrollFrame.Visible = true
+
+	print("[Leaderboard] Found", #entries, "entries")
+
+	-- Create entries
 	for rank, entry in ipairs(entries) do
 		local entryFrame = Instance.new("Frame")
 		entryFrame.Name = "Entry_" .. rank
-		entryFrame.Size = UDim2.new(1, -10, 0, 40)
-		entryFrame.Position = UDim2.new(0, 5, 0, yOffset)
+		entryFrame.Size = UDim2.new(1, 0, 0, 40)
 		entryFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 		entryFrame.BorderSizePixel = 0
+		entryFrame.LayoutOrder = rank
 		entryFrame.Parent = scrollFrame
 
 		-- Rank
@@ -170,15 +221,13 @@ local function updateLeaderboard()
 		timeLabel.Font = Enum.Font.Code
 		timeLabel.TextXAlignment = Enum.TextXAlignment.Right
 		timeLabel.Parent = entryFrame
-
-		yOffset = yOffset + 45
 	end
 
-	-- Update canvas size
-	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, yOffset)
+	print("[Leaderboard] Display updated with", #entries, "entries")
 end
 
 -- Initial update
+print("[Leaderboard] Script loaded, waiting 5 seconds before first update...")
 task.wait(5)
 updateLeaderboard()
 
