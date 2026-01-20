@@ -1,0 +1,21 @@
+{
+	"name": "InfiniteLoadingScreenGame",
+	"tree": {
+		"$className": "DataModel",
+		"StarterGui": {
+			"$className": "StarterGui",
+			"LoadingScreen": {
+				"$className": "ScreenGui",
+				"$properties": {
+					"ResetOnSpawn": false,
+					"ZIndexBehavior": "Sibling",
+					"DisplayOrder": 100
+				},
+				"LoadingScreenScript": {
+					"$className": "LocalScript",
+					"$path": "src/StarterGui/LoadingScreen/LoadingScreenGui.lua"
+				}
+			}
+		}
+	}
+}
