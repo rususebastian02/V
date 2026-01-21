@@ -10,9 +10,7 @@
 ]]
 
 local DataStoreService = game:GetService("DataStoreService")
-local Players = game:GetService("Players")
 
-local PlayerDataStore = DataStoreService:GetDataStore("PlayerSessionData_v1")
 local LeaderboardStore = DataStoreService:GetOrderedDataStore("GlobalLeaderboard_v1")
 
 -- Reference to the part and SurfaceGui
@@ -112,26 +110,6 @@ local function formatTime(seconds)
 		return string.format("%ds", secs)
 	end
 end
-
--- Update leaderboard data when player leaves
-Players.PlayerRemoving:Connect(function(player)
-	task.wait(2) -- Wait for data to save
-
-	local success, errorMsg = pcall(function()
-		local userId = "Player_" .. player.UserId
-		local data = PlayerDataStore:GetAsync(userId)
-
-		if data and data.totalTime and data.totalTime > 0 then
-			-- Update ordered data store
-			LeaderboardStore:SetAsync(player.Name, data.totalTime)
-			print("[Leaderboard] Updated:", player.Name, "with", data.totalTime, "seconds")
-		end
-	end)
-
-	if not success then
-		warn("[Leaderboard] Failed to update player data:", errorMsg)
-	end
-end)
 
 -- Update leaderboard display
 local function updateLeaderboard()

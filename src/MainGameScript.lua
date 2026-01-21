@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- DataStore
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerSessionData_v1")
+local LeaderboardStore = DataStoreService:GetOrderedDataStore("GlobalLeaderboard_v1")
 
 -- Remote Events (create these in ReplicatedStorage)
 local UpdateTimerEvent = Instance.new("RemoteEvent")
@@ -201,6 +202,23 @@ Players.PlayerRemoving:Connect(function(player)
 
 		-- Save data
 		SavePlayerData(player, timeSpent)
+
+		-- Update leaderboard (OrderedDataStore)
+		task.spawn(function()
+			local success, errorMsg = pcall(function()
+				local userId = "Player_" .. player.UserId
+				local playerData = PlayerDataStore:GetAsync(userId)
+
+				if playerData and playerData.totalTime and playerData.totalTime > 0 then
+					LeaderboardStore:SetAsync(player.Name, playerData.totalTime)
+					print("[Leaderboard] Updated:", player.Name, "with", playerData.totalTime, "seconds")
+				end
+			end)
+
+			if not success then
+				warn("[Leaderboard] Failed to update:", errorMsg)
+			end
+		end)
 
 		-- Clean up
 		ActiveSessions[player.UserId] = nil
