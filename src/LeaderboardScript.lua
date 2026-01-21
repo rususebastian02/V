@@ -155,7 +155,7 @@ local function updateLeaderboard()
 	for rank, entry in ipairs(entries) do
 		local entryFrame = Instance.new("Frame")
 		entryFrame.Name = "Entry_" .. rank
-		entryFrame.Size = UDim2.new(1, 0, 0, 40)
+		entryFrame.Size = UDim2.new(1, 0, 0, 50)
 		entryFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 		entryFrame.BorderSizePixel = 0
 		entryFrame.LayoutOrder = rank
@@ -164,25 +164,51 @@ local function updateLeaderboard()
 		-- Rank
 		local rankLabel = Instance.new("TextLabel")
 		rankLabel.Name = "Rank"
-		rankLabel.Size = UDim2.new(0, 60, 1, 0)
-		rankLabel.Position = UDim2.new(0, 10, 0, 0)
+		rankLabel.Size = UDim2.new(0, 40, 1, 0)
+		rankLabel.Position = UDim2.new(0, 5, 0, 0)
 		rankLabel.BackgroundTransparency = 1
 		rankLabel.Text = "#" .. rank
 		rankLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-		rankLabel.TextSize = 18
+		rankLabel.TextSize = 16
 		rankLabel.Font = Enum.Font.Code
 		rankLabel.TextXAlignment = Enum.TextXAlignment.Left
 		rankLabel.Parent = entryFrame
 
+		-- Avatar (circular)
+		local avatarFrame = Instance.new("ImageLabel")
+		avatarFrame.Name = "Avatar"
+		avatarFrame.Size = UDim2.new(0, 35, 0, 35)
+		avatarFrame.Position = UDim2.new(0, 50, 0.5, -17.5)
+		avatarFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		avatarFrame.BorderSizePixel = 0
+		avatarFrame.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+		avatarFrame.Parent = entryFrame
+
+		-- Make avatar circular
+		local avatarCorner = Instance.new("UICorner")
+		avatarCorner.CornerRadius = UDim.new(1, 0)
+		avatarCorner.Parent = avatarFrame
+
+		-- Load avatar asynchronously
+		task.spawn(function()
+			local success, userId = pcall(function()
+				return game:GetService("Players"):GetUserIdFromNameAsync(entry.key)
+			end)
+
+			if success and userId then
+				avatarFrame.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. userId .. "&width=150&height=150&format=png"
+			end
+		end)
+
 		-- Username
 		local nameLabel = Instance.new("TextLabel")
 		nameLabel.Name = "Username"
-		nameLabel.Size = UDim2.new(0.5, 0, 1, 0)
-		nameLabel.Position = UDim2.new(0, 80, 0, 0)
+		nameLabel.Size = UDim2.new(0.4, 0, 1, 0)
+		nameLabel.Position = UDim2.new(0, 95, 0, 0)
 		nameLabel.BackgroundTransparency = 1
 		nameLabel.Text = entry.key
 		nameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-		nameLabel.TextSize = 18
+		nameLabel.TextSize = 16
 		nameLabel.Font = Enum.Font.Code
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 		nameLabel.Parent = entryFrame
