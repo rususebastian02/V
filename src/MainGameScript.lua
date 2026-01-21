@@ -37,6 +37,7 @@ local ActiveSessions = {}
 
 -- Save player data
 local function SavePlayerData(player, timeSpent)
+	local totalTime = 0
 	local success, errorMessage = pcall(function()
 		local userId = "Player_" .. player.UserId
 		local data = PlayerDataStore:GetAsync(userId) or {
@@ -49,12 +50,16 @@ local function SavePlayerData(player, timeSpent)
 		data.sessions = data.sessions + 1
 		data.lastVisit = os.time()
 
+		totalTime = data.totalTime
+
 		PlayerDataStore:SetAsync(userId, data)
 	end)
 
 	if not success then
 		warn("Failed to save data for " .. player.Name .. ": " .. errorMessage)
 	end
+
+	return success, totalTime
 end
 
 -- Load player data
@@ -200,25 +205,24 @@ Players.PlayerRemoving:Connect(function(player)
 		local data = LoadPlayerData(player)
 		data.previousSessionTime = timeSpent
 
-		-- Save data
-		SavePlayerData(player, timeSpent)
+		-- Save data and get total time
+		local saveSuccess, totalTime = SavePlayerData(player, timeSpent)
 
 		-- Update leaderboard (OrderedDataStore)
-		task.spawn(function()
-			local success, errorMsg = pcall(function()
-				local userId = "Player_" .. player.UserId
-				local playerData = PlayerDataStore:GetAsync(userId)
+		if saveSuccess and totalTime > 0 then
+			task.spawn(function()
+				local success, errorMsg = pcall(function()
+					LeaderboardStore:SetAsync(player.Name, totalTime)
+					print("[Leaderboard] Updated:", player.Name, "with", totalTime, "seconds")
+				end)
 
-				if playerData and playerData.totalTime and playerData.totalTime > 0 then
-					LeaderboardStore:SetAsync(player.Name, playerData.totalTime)
-					print("[Leaderboard] Updated:", player.Name, "with", playerData.totalTime, "seconds")
+				if not success then
+					warn("[Leaderboard] Failed to update:", errorMsg)
 				end
 			end)
-
-			if not success then
-				warn("[Leaderboard] Failed to update:", errorMsg)
-			end
-		end)
+		else
+			print("[Leaderboard] Skipped update for", player.Name, "- save failed or totalTime is 0")
+		end
 
 		-- Clean up
 		ActiveSessions[player.UserId] = nil
