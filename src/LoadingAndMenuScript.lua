@@ -39,7 +39,7 @@ loadingText.Name = "LoadingText"
 loadingText.Size = UDim2.new(1, 0, 0, 50)
 loadingText.Position = UDim2.new(0, 0, 0.5, -25)
 loadingText.BackgroundTransparency = 1
-loadingText.Text = "Loading..."
+loadingText.Text = "Loading"
 loadingText.TextColor3 = Color3.fromRGB(200, 200, 200)
 loadingText.TextSize = 24
 loadingText.Font = Enum.Font.Code
@@ -47,6 +47,20 @@ loadingText.TextTransparency = 0
 loadingText.TextStrokeTransparency = 0.8
 loadingText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 loadingText.Parent = loadingFrame
+
+-- Animate loading dots
+task.spawn(function()
+	local dots = {"", ".", "..", "..."}
+	local index = 1
+	while loadingFrame.Visible do
+		loadingText.Text = "Loading" .. dots[index]
+		index = index + 1
+		if index > #dots then
+			index = 1
+		end
+		task.wait(0.5)
+	end
+end)
 
 -- Main Menu Frame (hidden initially)
 local menuFrame = Instance.new("Frame")
@@ -69,7 +83,7 @@ titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(1, 0, 0, 80)
 titleLabel.Position = UDim2.new(0, 0, 0.3, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "MINIMALIST GAME ROOM"
+titleLabel.Text = "You're Still Here."
 titleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 titleLabel.TextSize = 36
 titleLabel.Font = Enum.Font.Code
@@ -120,9 +134,15 @@ local function setupMenuCamera()
 	-- Find spawn location or use default position
 	local spawnLocation = workspace:FindFirstChild("SpawnLocation")
 	if spawnLocation then
-		camera.CFrame = CFrame.new(spawnLocation.Position + Vector3.new(0, 5, 10), spawnLocation.Position)
+		-- Camera: più in alto, spostata verso destra, inquadra a sinistra di 45 gradi
+		local cameraPos = spawnLocation.Position + Vector3.new(10, 15, 10)
+		local lookAtPos = spawnLocation.Position + Vector3.new(-5, 0, 0)
+		camera.CFrame = CFrame.new(cameraPos, lookAtPos)
 	else
-		camera.CFrame = CFrame.new(0, 10, 20) * CFrame.Angles(math.rad(-15), 0, 0)
+		-- Default: alto, destra, guarda sinistra
+		local cameraPos = Vector3.new(10, 15, 10)
+		local lookAtPos = Vector3.new(-5, 0, 0)
+		camera.CFrame = CFrame.new(cameraPos, lookAtPos)
 	end
 end
 
