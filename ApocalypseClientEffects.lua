@@ -33,7 +33,7 @@ local apocalypseFogColor = Color3.fromRGB(255, 140, 40)
 
 -- Funzione per avviare gli effetti visivi dell'apocalisse
 local function startVisualEffects()
-	print("🔥 Effetti visivi apocalisse attivati!")
+	print("Visual effects activated")
 
 	-- Attiva il blur molto leggero
 	blurEffect.Enabled = true
@@ -98,7 +98,7 @@ end
 
 -- Funzione per resettare gli effetti visivi
 local function resetVisualEffects()
-	print("🔄 Reset effetti visivi")
+	print("Visual effects reset")
 
 	-- Disattiva il blur
 	blurEffect.Enabled = false
@@ -113,7 +113,7 @@ local function resetVisualEffects()
 	Lighting.FogColor = originalFogColor
 end
 
--- Funzione per mostrare annunci
+-- Function to show announcements (minimal style)
 local function showAnnouncement(message)
 	local screenGui = player.PlayerGui:FindFirstChild("AnnouncementGui")
 	if not screenGui then
@@ -122,40 +122,47 @@ local function showAnnouncement(message)
 		screenGui.Parent = player.PlayerGui
 	end
 
-	-- Rimuovi annunci precedenti
+	-- Remove previous announcements
 	for _, child in pairs(screenGui:GetChildren()) do
 		child:Destroy()
 	end
 
-	-- Crea il testo dell'annuncio
+	-- Create announcement text (minimal design)
 	local textLabel = Instance.new("TextLabel")
-	textLabel.Size = UDim2.new(1, 0, 0.2, 0)
-	textLabel.Position = UDim2.new(0, 0, 0.4, 0)
-	textLabel.BackgroundTransparency = 1
+	textLabel.Size = UDim2.new(0, 400, 0, 50)
+	textLabel.Position = UDim2.new(0.5, -200, 0.3, 0)
+	textLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	textLabel.BackgroundTransparency = 0.5
+	textLabel.BorderSizePixel = 0
 	textLabel.Text = message
-	textLabel.TextSize = 48
+	textLabel.TextSize = 24
 	textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	textLabel.TextStrokeTransparency = 0.5
-	textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-	textLabel.Font = Enum.Font.GothamBold
+	textLabel.TextTransparency = 0
+	textLabel.Font = Enum.Font.Gotham
 	textLabel.Parent = screenGui
 
-	-- Animazione fade in/out
+	-- Subtle rounded corners
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 6)
+	corner.Parent = textLabel
+
+	-- Simple fade in/out
+	textLabel.BackgroundTransparency = 1
 	textLabel.TextTransparency = 1
 
 	local fadeInTween = TweenService:Create(
 		textLabel,
-		TweenInfo.new(0.5),
-		{TextTransparency = 0, TextStrokeTransparency = 0.5}
+		TweenInfo.new(0.3),
+		{TextTransparency = 0, BackgroundTransparency = 0.5}
 	)
 	fadeInTween:Play()
 
-	wait(3)
+	wait(2.5)
 
 	local fadeOutTween = TweenService:Create(
 		textLabel,
-		TweenInfo.new(0.5),
-		{TextTransparency = 1, TextStrokeTransparency = 1}
+		TweenInfo.new(0.3),
+		{TextTransparency = 1, BackgroundTransparency = 1}
 	)
 	fadeOutTween:Play()
 	fadeOutTween.Completed:Wait()
@@ -173,4 +180,4 @@ apocalypseEvent.OnClientEvent:Connect(function(action, data)
 	end
 end)
 
-print("✅ Script client effetti apocalisse caricato")
+print("Apocalypse client effects loaded")

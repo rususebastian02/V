@@ -17,7 +17,7 @@ local disintegrateParticles = nil
 
 -- Funzione per creare le particelle di cenere
 local function createAshParticles()
-	print("🌫️ Creando particelle di cenere")
+	print("Creating ash particles")
 
 	if ashParticles then
 		ashParticles:Destroy()
@@ -58,7 +58,7 @@ end
 
 -- Funzione per creare le particelle di disintegrazione (Thanos Snap style)
 local function createDisintegrateParticles()
-	print("✨ Creando particelle di disintegrazione")
+	print("Creating disintegration particles")
 
 	if disintegrateParticles then
 		disintegrateParticles:Destroy()
@@ -136,12 +136,12 @@ createDisintegrateParticles()
 -- Ascolta gli eventi dal server
 apocalypseEvent.OnClientEvent:Connect(function(action)
 	if action == "ash" then
-		print("🔥 Attivando particelle di cenere")
+		print("Activating ash particles")
 		ashParticles.Enabled = true
 		addParticlesToAllParts(ashParticles)
 
 	elseif action == "disintegrate" then
-		print("💥 Attivando particelle di disintegrazione")
+		print("Activating disintegration particles")
 
 		-- Disattiva le particelle di cenere
 		if ashParticles then
@@ -158,7 +158,7 @@ apocalypseEvent.OnClientEvent:Connect(function(action)
 		addParticlesToAllParts(disintegrateParticles)
 
 	elseif action == "reset" then
-		print("🔄 Resettando particelle")
+		print("Resetting particles")
 		removeAllParticles()
 		-- Ricrea le particelle per il prossimo ciclo
 		wait(0.5)
@@ -178,4 +178,4 @@ player.CharacterAdded:Connect(function(newCharacter)
 	createDisintegrateParticles()
 end)
 
-print("✅ Script particelle apocalisse caricato")
+print("Apocalypse particles loaded")

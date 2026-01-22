@@ -21,7 +21,7 @@ countdownValue.Parent = ReplicatedStorage
 
 -- Funzione per avviare l'apocalisse
 local function startApocalypse()
-	print("🌋 L'APOCALISSE È INIZIATA!")
+	print("Apocalypse started")
 
 	-- Notifica tutti i client di avviare gli effetti visivi
 	apocalypseEvent:FireAllClients("start")
@@ -59,7 +59,7 @@ local function startApocalypse()
 		end
 	end
 
-	print("💀 Tutti i player sono morti. Resetto il mondo...")
+	print("All players eliminated. Resetting world...")
 	wait(3)
 
 	-- Reset del mondo
@@ -68,7 +68,7 @@ end
 
 -- Funzione per resettare il mondo
 function resetWorld()
-	print("🔄 Resetting del mondo in corso...")
+	print("World reset in progress...")
 
 	-- Notifica i client di fermare gli effetti
 	apocalypseEvent:FireAllClients("reset")
@@ -88,24 +88,24 @@ end
 
 -- Funzione per il countdown
 function startCountdown()
-	print("⏰ Countdown iniziato: " .. COUNTDOWN_TIME .. " secondi")
+	print("Countdown started: " .. COUNTDOWN_TIME .. " seconds")
 
 	local timeRemaining = COUNTDOWN_TIME
 
 	while timeRemaining > 0 do
 		countdownValue.Value = timeRemaining
 
-		-- Annunci periodici
+		-- Periodic announcements
 		if timeRemaining == 600 then
-			apocalypseEvent:FireAllClients("announcement", "⚠️ 10 minuti rimanenti!")
+			apocalypseEvent:FireAllClients("announcement", "10 minutes remaining")
 		elseif timeRemaining == 300 then
-			apocalypseEvent:FireAllClients("announcement", "⚠️ 5 minuti rimanenti!")
+			apocalypseEvent:FireAllClients("announcement", "5 minutes remaining")
 		elseif timeRemaining == 60 then
-			apocalypseEvent:FireAllClients("announcement", "⚠️ 1 minuto rimanente!")
+			apocalypseEvent:FireAllClients("announcement", "1 minute remaining")
 		elseif timeRemaining == 30 then
-			apocalypseEvent:FireAllClients("announcement", "⚠️ 30 secondi!")
+			apocalypseEvent:FireAllClients("announcement", "30 seconds")
 		elseif timeRemaining == 10 then
-			apocalypseEvent:FireAllClients("announcement", "⚠️ 10 secondi!")
+			apocalypseEvent:FireAllClients("announcement", "10 seconds")
 		end
 
 		wait(1)
