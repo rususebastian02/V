@@ -19,6 +19,14 @@ countdownValue.Name = "CountdownValue"
 countdownValue.Value = COUNTDOWN_TIME
 countdownValue.Parent = ReplicatedStorage
 
+-- Create apocalypse music
+local apocalypseMusic = Instance.new("Sound")
+apocalypseMusic.Name = "ApocalypseMusic"
+apocalypseMusic.SoundId = "rbxassetid://9041785975"
+apocalypseMusic.Volume = 0.5
+apocalypseMusic.Looped = true
+apocalypseMusic.Parent = workspace
+
 -- Funzione per avviare l'apocalisse
 local function startApocalypse()
 	print("Apocalypse started")
@@ -31,12 +39,6 @@ local function startApocalypse()
 
 	-- Attiva le particelle di cenere
 	apocalypseEvent:FireAllClients("ash")
-
-	-- Attendi altri 4 secondi prima della disintegrazione
-	wait(4)
-
-	-- Attiva le particelle di disintegrazione e inizia a infliggere danno
-	apocalypseEvent:FireAllClients("disintegrate")
 
 	-- Inizia a infliggere danno ai player
 	local damageStartTime = tick()
@@ -70,6 +72,9 @@ end
 function resetWorld()
 	print("World reset in progress...")
 
+	-- Stop music
+	apocalypseMusic:Stop()
+
 	-- Notifica i client di fermare gli effetti
 	apocalypseEvent:FireAllClients("reset")
 
@@ -94,6 +99,13 @@ function startCountdown()
 
 	while timeRemaining > 0 do
 		countdownValue.Value = timeRemaining
+
+		-- Start music at 2:40 remaining
+		if timeRemaining == 160 then
+			print("Starting apocalypse music")
+			apocalypseMusic:Play()
+			apocalypseEvent:FireAllClients("music_start")
+		end
 
 		-- Periodic announcements
 		if timeRemaining == 600 then

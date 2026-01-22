@@ -18,6 +18,12 @@ blurEffect.Size = 0
 blurEffect.Parent = Lighting
 blurEffect.Enabled = false
 
+-- Crea il color correction per il contrasto
+local colorCorrection = Instance.new("ColorCorrectionEffect")
+colorCorrection.Contrast = 0
+colorCorrection.Parent = Lighting
+colorCorrection.Enabled = false
+
 -- Salva le impostazioni originali del Lighting
 local originalAmbient = Lighting.Ambient
 local originalOutdoorAmbient = Lighting.OutdoorAmbient
@@ -104,6 +110,10 @@ local function resetVisualEffects()
 	blurEffect.Enabled = false
 	blurEffect.Size = 0
 
+	-- Disattiva il contrasto
+	colorCorrection.Enabled = false
+	colorCorrection.Contrast = 0
+
 	-- Ripristina le impostazioni originali del Lighting
 	Lighting.Ambient = originalAmbient
 	Lighting.OutdoorAmbient = originalOutdoorAmbient
@@ -111,6 +121,29 @@ local function resetVisualEffects()
 	Lighting.ClockTime = originalClockTime
 	Lighting.FogEnd = originalFogEnd
 	Lighting.FogColor = originalFogColor
+end
+
+-- Funzione per attivare blur e contrasto quando parte la musica
+local function startMusicEffects()
+	print("Music effects activated - increasing blur and contrast")
+
+	-- Aumenta il blur di +1 (da 3 a 4) con fade in
+	local currentBlurSize = blurEffect.Size
+	local blurTween = TweenService:Create(
+		blurEffect,
+		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{Size = currentBlurSize + 1}
+	)
+	blurTween:Play()
+
+	-- Attiva e aumenta il contrasto di +1 con fade in
+	colorCorrection.Enabled = true
+	local contrastTween = TweenService:Create(
+		colorCorrection,
+		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{Contrast = 1}
+	)
+	contrastTween:Play()
 end
 
 -- Function to show announcements (minimal style)
@@ -177,6 +210,8 @@ apocalypseEvent.OnClientEvent:Connect(function(action, data)
 		resetVisualEffects()
 	elseif action == "announcement" then
 		showAnnouncement(data)
+	elseif action == "music_start" then
+		startMusicEffects()
 	end
 end)
 

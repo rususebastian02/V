@@ -13,7 +13,6 @@ local apocalypseEvent = ReplicatedStorage:WaitForChild("ApocalypseEvent")
 
 -- Riferimenti alle particelle
 local ashParticles = nil
-local disintegrateParticles = nil
 
 -- Funzione per creare le particelle di cenere
 local function createAshParticles()
@@ -56,46 +55,6 @@ local function createAshParticles()
 	ashParticles.Parent = humanoidRootPart
 end
 
--- Funzione per creare le particelle di disintegrazione (Thanos Snap style)
-local function createDisintegrateParticles()
-	print("Creating disintegration particles")
-
-	if disintegrateParticles then
-		disintegrateParticles:Destroy()
-	end
-
-	disintegrateParticles = Instance.new("ParticleEmitter")
-	disintegrateParticles.Name = "DisintegrateParticles"
-
-	-- Proprietà delle particelle di disintegrazione
-	disintegrateParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	disintegrateParticles.Color = ColorSequence.new(Color3.fromRGB(200, 150, 100), Color3.fromRGB(150, 100, 50))
-	disintegrateParticles.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.3),
-		NumberSequenceKeypoint.new(0.5, 0.2),
-		NumberSequenceKeypoint.new(1, 0)
-	})
-	disintegrateParticles.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.2),
-		NumberSequenceKeypoint.new(0.5, 0.5),
-		NumberSequenceKeypoint.new(1, 1)
-	})
-
-	disintegrateParticles.Lifetime = NumberRange.new(1, 2)
-	disintegrateParticles.Rate = 100
-	disintegrateParticles.Speed = NumberRange.new(5, 15)
-	disintegrateParticles.SpreadAngle = Vector2.new(180, 180)
-	disintegrateParticles.Rotation = NumberRange.new(0, 360)
-	disintegrateParticles.RotSpeed = NumberRange.new(-200, 200)
-	disintegrateParticles.VelocityInheritance = 0
-
-	-- Gravità verso il basso
-	disintegrateParticles.Acceleration = Vector3.new(0, -20, 0)
-
-	disintegrateParticles.Enabled = false
-	disintegrateParticles.Parent = humanoidRootPart
-end
-
 -- Funzione per aggiungere particelle a tutte le parti del corpo
 local function addParticlesToAllParts(particleType)
 	local bodyParts = {"Head", "Torso", "UpperTorso", "LowerTorso", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "LeftHand", "RightHand", "LeftFoot", "RightFoot", "LeftUpperArm", "RightUpperArm", "LeftLowerArm", "RightLowerArm", "LeftUpperLeg", "RightUpperLeg", "LeftLowerLeg", "RightLowerLeg"}
@@ -113,7 +72,7 @@ end
 -- Funzione per rimuovere tutte le particelle
 local function removeAllParticles()
 	for _, descendant in pairs(character:GetDescendants()) do
-		if descendant:IsA("ParticleEmitter") and (descendant.Name == "AshParticles" or descendant.Name == "DisintegrateParticles") then
+		if descendant:IsA("ParticleEmitter") and descendant.Name == "AshParticles" then
 			descendant:Destroy()
 		end
 	end
@@ -122,16 +81,10 @@ local function removeAllParticles()
 		ashParticles:Destroy()
 		ashParticles = nil
 	end
-
-	if disintegrateParticles then
-		disintegrateParticles:Destroy()
-		disintegrateParticles = nil
-	end
 end
 
 -- Crea le particelle all'avvio
 createAshParticles()
-createDisintegrateParticles()
 
 -- Ascolta gli eventi dal server
 apocalypseEvent.OnClientEvent:Connect(function(action)
@@ -140,30 +93,12 @@ apocalypseEvent.OnClientEvent:Connect(function(action)
 		ashParticles.Enabled = true
 		addParticlesToAllParts(ashParticles)
 
-	elseif action == "disintegrate" then
-		print("Activating disintegration particles")
-
-		-- Disattiva le particelle di cenere
-		if ashParticles then
-			ashParticles.Enabled = false
-			for _, descendant in pairs(character:GetDescendants()) do
-				if descendant:IsA("ParticleEmitter") and descendant.Name == "AshParticles" then
-					descendant.Enabled = false
-				end
-			end
-		end
-
-		-- Attiva le particelle di disintegrazione
-		disintegrateParticles.Enabled = true
-		addParticlesToAllParts(disintegrateParticles)
-
 	elseif action == "reset" then
 		print("Resetting particles")
 		removeAllParticles()
 		-- Ricrea le particelle per il prossimo ciclo
 		wait(0.5)
 		createAshParticles()
-		createDisintegrateParticles()
 	end
 end)
 
@@ -175,7 +110,6 @@ player.CharacterAdded:Connect(function(newCharacter)
 	removeAllParticles()
 	wait(0.5)
 	createAshParticles()
-	createDisintegrateParticles()
 end)
 
 print("Apocalypse particles loaded")
