@@ -9,8 +9,10 @@ local BadgeService = game:GetService("BadgeService")
 -- DataStore for tracking dream phrases
 local dreamPhrasesDataStore = DataStoreService:GetDataStore("DreamPhrasesSeenV1")
 
--- Badge ID for seeing all dream phrases (set this to your badge ID)
-local ALL_DREAMS_BADGE_ID = 0 -- CAMBIA QUESTO CON L'ID DEL TUO BADGE
+-- Badge IDs
+local ALL_DREAMS_BADGE_ID = 0 -- CAMBIA QUESTO CON L'ID DEL TUO BADGE (Dream Collector)
+local WELCOME_BADGE_ID = 515603571785681 -- Welcome badge
+local DREAMER_BADGE_ID = 3190667505182002 -- First apocalypse completion badge
 
 -- Configurazione
 local COUNTDOWN_TIME = 30 * 60 -- 30 minuti in secondi
@@ -62,10 +64,23 @@ local function startApocalypse()
 		wait(1)
 	end
 
-	-- Assicurati che tutti i player siano morti
+	-- Assicurati che tutti i player siano morti e award dreamer badge
 	for _, player in pairs(Players:GetPlayers()) do
 		if player.Character and player.Character:FindFirstChild("Humanoid") then
 			player.Character.Humanoid.Health = 0
+
+			-- Award Dreamer badge for completing first apocalypse
+			local success, hasBadge = pcall(function()
+				return BadgeService:UserHasBadgeAsync(player.UserId, DREAMER_BADGE_ID)
+			end)
+
+			if success and not hasBadge then
+				pcall(function()
+					BadgeService:AwardBadge(player.UserId, DREAMER_BADGE_ID)
+					print("Dreamer badge awarded to " .. player.Name)
+					apocalypseEvent:FireClient(player, "badge_unlocked", "Dreamer")
+				end)
+			end
 		end
 	end
 
@@ -192,6 +207,18 @@ end
 -- Load phrases when player joins
 Players.PlayerAdded:Connect(function(player)
 	loadPlayerPhrases(player)
+
+	-- Award welcome badge on first join
+	local success, hasBadge = pcall(function()
+		return BadgeService:UserHasBadgeAsync(player.UserId, WELCOME_BADGE_ID)
+	end)
+
+	if success and not hasBadge then
+		pcall(function()
+			BadgeService:AwardBadge(player.UserId, WELCOME_BADGE_ID)
+			print("Welcome badge awarded to " .. player.Name)
+		end)
+	end
 end)
 
 -- Save phrases when player leaves
