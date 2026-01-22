@@ -327,6 +327,90 @@ local function showDreamPhrase(message)
 	textLabel:Destroy()
 end
 
+-- Function to show badge unlock notification
+local function showBadgeUnlock(badgeName)
+	local screenGui = player.PlayerGui:FindFirstChild("BadgeUnlockGui")
+	if not screenGui then
+		screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "BadgeUnlockGui"
+		screenGui.Parent = player.PlayerGui
+	end
+
+	-- Remove previous notifications
+	for _, child in pairs(screenGui:GetChildren()) do
+		child:Destroy()
+	end
+
+	-- Create badge notification (elegant design)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 350, 0, 100)
+	frame.Position = UDim2.new(0.5, -175, 0.8, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	frame.BackgroundTransparency = 0.3
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = frame
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0.4, 0)
+	title.Position = UDim2.new(0, 0, 0.1, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "Badge Unlocked!"
+	title.TextSize = 20
+	title.TextColor3 = Color3.fromRGB(255, 215, 0)
+	title.Font = Enum.Font.GothamBold
+	title.Parent = frame
+
+	local badgeLabel = Instance.new("TextLabel")
+	badgeLabel.Size = UDim2.new(1, 0, 0.4, 0)
+	badgeLabel.Position = UDim2.new(0, 0, 0.5, 0)
+	badgeLabel.BackgroundTransparency = 1
+	badgeLabel.Text = badgeName
+	badgeLabel.TextSize = 18
+	badgeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	badgeLabel.Font = Enum.Font.Gotham
+	badgeLabel.Parent = frame
+
+	-- Slide up animation
+	frame.Position = UDim2.new(0.5, -175, 1.2, 0)
+	local slideUpTween = TweenService:Create(
+		frame,
+		TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{Position = UDim2.new(0.5, -175, 0.8, 0)}
+	)
+	slideUpTween:Play()
+
+	wait(5)
+
+	-- Slide down and fade out
+	local slideDownTween = TweenService:Create(
+		frame,
+		TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+		{Position = UDim2.new(0.5, -175, 1.2, 0), BackgroundTransparency = 1}
+	)
+	slideDownTween:Play()
+
+	local titleFadeTween = TweenService:Create(
+		title,
+		TweenInfo.new(0.5),
+		{TextTransparency = 1}
+	)
+	titleFadeTween:Play()
+
+	local badgeFadeTween = TweenService:Create(
+		badgeLabel,
+		TweenInfo.new(0.5),
+		{TextTransparency = 1}
+	)
+	badgeFadeTween:Play()
+
+	badgeFadeTween.Completed:Wait()
+	screenGui:Destroy()
+end
+
 -- Function to show announcements (minimal style)
 local function showAnnouncement(message)
 	local screenGui = player.PlayerGui:FindFirstChild("AnnouncementGui")
@@ -403,6 +487,8 @@ apocalypseEvent.OnClientEvent:Connect(function(action, data)
 		showAnnouncement(data)
 	elseif action == "dream_phrase" then
 		showDreamPhrase(data)
+	elseif action == "badge_unlocked" then
+		showBadgeUnlock(data)
 	end
 end)
 

@@ -3,6 +3,14 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
+local BadgeService = game:GetService("BadgeService")
+
+-- DataStore for tracking dream phrases
+local dreamPhrasesDataStore = DataStoreService:GetDataStore("DreamPhrasesSeenV1")
+
+-- Badge ID for seeing all dream phrases (set this to your badge ID)
+local ALL_DREAMS_BADGE_ID = 0 -- CAMBIA QUESTO CON L'ID DEL TUO BADGE
 
 -- Configurazione
 local COUNTDOWN_TIME = 30 * 60 -- 30 minuti in secondi
@@ -105,13 +113,107 @@ local dreamPhrases = {
 	"I remember this moment."
 }
 
+-- Track which players have seen which phrases (in-memory for current session)
+local playerSeenPhrases = {}
+
+-- Function to load player's seen phrases from DataStore
+local function loadPlayerPhrases(player)
+	local success, data = pcall(function()
+		return dreamPhrasesDataStore:GetAsync(tostring(player.UserId))
+	end)
+
+	if success and data then
+		playerSeenPhrases[player.UserId] = data
+		print("Loaded phrases for " .. player.Name .. ": " .. #data .. " seen")
+	else
+		playerSeenPhrases[player.UserId] = {}
+		print("New player dream tracking for " .. player.Name)
+	end
+end
+
+-- Function to save player's seen phrases to DataStore
+local function savePlayerPhrases(player)
+	local success, err = pcall(function()
+		dreamPhrasesDataStore:SetAsync(tostring(player.UserId), playerSeenPhrases[player.UserId])
+	end)
+
+	if not success then
+		warn("Failed to save phrases for " .. player.Name .. ": " .. tostring(err))
+	end
+end
+
+-- Function to mark a phrase as seen and check for badge
+local function markPhraseAsSeen(player, phraseIndex)
+	local userId = player.UserId
+
+	if not playerSeenPhrases[userId] then
+		playerSeenPhrases[userId] = {}
+	end
+
+	-- Check if phrase was already seen
+	for _, seenIndex in pairs(playerSeenPhrases[userId]) do
+		if seenIndex == phraseIndex then
+			return -- Already seen this phrase
+		end
+	end
+
+	-- Add new phrase to seen list
+	table.insert(playerSeenPhrases[userId], phraseIndex)
+	print(player.Name .. " saw phrase #" .. phraseIndex .. " (" .. #playerSeenPhrases[userId] .. "/10)")
+
+	-- Save to DataStore
+	savePlayerPhrases(player)
+
+	-- Check if player has seen all phrases
+	if #playerSeenPhrases[userId] >= #dreamPhrases then
+		print(player.Name .. " has seen all dream phrases! Awarding badge...")
+
+		-- Award badge if not already owned
+		if ALL_DREAMS_BADGE_ID > 0 then
+			local success, hasBadge = pcall(function()
+				return BadgeService:UserHasBadgeAsync(userId, ALL_DREAMS_BADGE_ID)
+			end)
+
+			if success and not hasBadge then
+				local awardSuccess = pcall(function()
+					BadgeService:AwardBadge(userId, ALL_DREAMS_BADGE_ID)
+				end)
+
+				if awardSuccess then
+					print("Badge awarded to " .. player.Name)
+					-- Notify player
+					apocalypseEvent:FireClient(player, "badge_unlocked", "Dream Collector")
+				end
+			end
+		end
+	end
+end
+
+-- Load phrases when player joins
+Players.PlayerAdded:Connect(function(player)
+	loadPlayerPhrases(player)
+end)
+
+-- Save phrases when player leaves
+Players.PlayerRemoving:Connect(function(player)
+	if playerSeenPhrases[player.UserId] then
+		savePlayerPhrases(player)
+	end
+end)
+
 -- Funzione per il countdown
 function startCountdown()
 	print("Countdown started: " .. COUNTDOWN_TIME .. " seconds")
 
 	-- Send random dream phrase to all clients
-	local randomPhrase = dreamPhrases[math.random(1, #dreamPhrases)]
+	local randomIndex = math.random(1, #dreamPhrases)
+	local randomPhrase = dreamPhrases[randomIndex]
 	apocalypseEvent:FireAllClients("dream_phrase", randomPhrase)
+
+	-- Mark this phrase as seen for all players in the server
+	for _, player in pairs(Players:GetPlayers()) do
+		markPhraseAsSeen(player, randomIndex)
+	end
 
 	local timeRemaining = COUNTDOWN_TIME
 
