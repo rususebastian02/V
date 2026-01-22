@@ -1,0 +1,176 @@
+-- POSIZIONA QUESTO SCRIPT IN: StarterPlayer > StarterPlayerScripts
+-- Script client per gli effetti visivi dell'apocalisse
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Aspetta che gli eventi remoti siano disponibili
+local apocalypseEvent = ReplicatedStorage:WaitForChild("ApocalypseEvent")
+
+-- Crea il blur effect (disabilitato di default)
+local blurEffect = Instance.new("BlurEffect")
+blurEffect.Size = 0
+blurEffect.Parent = Lighting
+blurEffect.Enabled = false
+
+-- Salva le impostazioni originali del Lighting
+local originalAmbient = Lighting.Ambient
+local originalOutdoorAmbient = Lighting.OutdoorAmbient
+local originalBrightness = Lighting.Brightness
+local originalClockTime = Lighting.ClockTime
+local originalFogEnd = Lighting.FogEnd
+local originalFogColor = Lighting.FogColor
+
+-- Colori apocalittici (giallo/arancio)
+local apocalypseAmbient = Color3.fromRGB(255, 150, 50)
+local apocalypseOutdoorAmbient = Color3.fromRGB(255, 180, 80)
+local apocalypseFogColor = Color3.fromRGB(255, 140, 40)
+
+-- Funzione per avviare gli effetti visivi dell'apocalisse
+local function startVisualEffects()
+	print("🔥 Effetti visivi apocalisse attivati!")
+
+	-- Attiva il blur molto leggero
+	blurEffect.Enabled = true
+	local blurTween = TweenService:Create(
+		blurEffect,
+		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{Size = 3} -- Blur molto leggero
+	)
+	blurTween:Play()
+
+	-- Cambia l'atmosfera con tween
+	local lightingTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+	-- Tween per Ambient
+	local ambientTween = TweenService:Create(
+		Lighting,
+		lightingTweenInfo,
+		{Ambient = apocalypseAmbient}
+	)
+	ambientTween:Play()
+
+	-- Tween per OutdoorAmbient
+	local outdoorAmbientTween = TweenService:Create(
+		Lighting,
+		lightingTweenInfo,
+		{OutdoorAmbient = apocalypseOutdoorAmbient}
+	)
+	outdoorAmbientTween:Play()
+
+	-- Tween per Brightness
+	local brightnessTween = TweenService:Create(
+		Lighting,
+		lightingTweenInfo,
+		{Brightness = 3}
+	)
+	brightnessTween:Play()
+
+	-- Tween per FogColor
+	local fogColorTween = TweenService:Create(
+		Lighting,
+		lightingTweenInfo,
+		{FogColor = apocalypseFogColor}
+	)
+	fogColorTween:Play()
+
+	-- Tween per FogEnd
+	local fogEndTween = TweenService:Create(
+		Lighting,
+		lightingTweenInfo,
+		{FogEnd = 500}
+	)
+	fogEndTween:Play()
+
+	-- Rendi il cielo più arancione/giallo
+	local clockTimeTween = TweenService:Create(
+		Lighting,
+		lightingTweenInfo,
+		{ClockTime = 6.5} -- Alba/Tramonto
+	)
+	clockTimeTween:Play()
+end
+
+-- Funzione per resettare gli effetti visivi
+local function resetVisualEffects()
+	print("🔄 Reset effetti visivi")
+
+	-- Disattiva il blur
+	blurEffect.Enabled = false
+	blurEffect.Size = 0
+
+	-- Ripristina le impostazioni originali del Lighting
+	Lighting.Ambient = originalAmbient
+	Lighting.OutdoorAmbient = originalOutdoorAmbient
+	Lighting.Brightness = originalBrightness
+	Lighting.ClockTime = originalClockTime
+	Lighting.FogEnd = originalFogEnd
+	Lighting.FogColor = originalFogColor
+end
+
+-- Funzione per mostrare annunci
+local function showAnnouncement(message)
+	local screenGui = player.PlayerGui:FindFirstChild("AnnouncementGui")
+	if not screenGui then
+		screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "AnnouncementGui"
+		screenGui.Parent = player.PlayerGui
+	end
+
+	-- Rimuovi annunci precedenti
+	for _, child in pairs(screenGui:GetChildren()) do
+		child:Destroy()
+	end
+
+	-- Crea il testo dell'annuncio
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, 0, 0.2, 0)
+	textLabel.Position = UDim2.new(0, 0, 0.4, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text = message
+	textLabel.TextSize = 48
+	textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	textLabel.TextStrokeTransparency = 0.5
+	textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	textLabel.Font = Enum.Font.GothamBold
+	textLabel.Parent = screenGui
+
+	-- Animazione fade in/out
+	textLabel.TextTransparency = 1
+
+	local fadeInTween = TweenService:Create(
+		textLabel,
+		TweenInfo.new(0.5),
+		{TextTransparency = 0, TextStrokeTransparency = 0.5}
+	)
+	fadeInTween:Play()
+
+	wait(3)
+
+	local fadeOutTween = TweenService:Create(
+		textLabel,
+		TweenInfo.new(0.5),
+		{TextTransparency = 1, TextStrokeTransparency = 1}
+	)
+	fadeOutTween:Play()
+	fadeOutTween.Completed:Wait()
+	textLabel:Destroy()
+end
+
+-- Ascolta gli eventi dal server
+apocalypseEvent.OnClientEvent:Connect(function(action, data)
+	if action == "start" then
+		startVisualEffects()
+	elseif action == "reset" then
+		resetVisualEffects()
+	elseif action == "announcement" then
+		showAnnouncement(data)
+	end
+end)
+
+print("✅ Script client effetti apocalisse caricato")
