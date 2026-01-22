@@ -100,6 +100,26 @@ function startCountdown()
 	while timeRemaining > 0 do
 		countdownValue.Value = timeRemaining
 
+		-- Phase 1: 20 minutes - Yellow sky, bigger sun, light wind
+		if timeRemaining == 1200 then
+			print("Phase 1: Yellow sky phase started")
+			apocalypseEvent:FireAllClients("phase_1")
+		end
+
+		-- Phase 2: 10 minutes - Falling ash, distant sounds
+		if timeRemaining == 600 then
+			print("Phase 2: Falling ash phase started")
+			apocalypseEvent:FireAllClients("phase_2")
+			apocalypseEvent:FireAllClients("announcement", "10 minutes remaining")
+		end
+
+		-- Phase 3: 5 minutes - Heavy breathing, blur, vignette, burning players
+		if timeRemaining == 300 then
+			print("Phase 3: Burning phase started")
+			apocalypseEvent:FireAllClients("phase_3")
+			apocalypseEvent:FireAllClients("announcement", "5 minutes remaining")
+		end
+
 		-- Start music at 2:40 remaining
 		if timeRemaining == 160 then
 			print("Starting apocalypse music")
@@ -107,12 +127,8 @@ function startCountdown()
 			apocalypseEvent:FireAllClients("music_start")
 		end
 
-		-- Periodic announcements
-		if timeRemaining == 600 then
-			apocalypseEvent:FireAllClients("announcement", "10 minutes remaining")
-		elseif timeRemaining == 300 then
-			apocalypseEvent:FireAllClients("announcement", "5 minutes remaining")
-		elseif timeRemaining == 60 then
+		-- Other announcements
+		if timeRemaining == 60 then
 			apocalypseEvent:FireAllClients("announcement", "1 minute remaining")
 		elseif timeRemaining == 30 then
 			apocalypseEvent:FireAllClients("announcement", "30 seconds")

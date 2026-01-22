@@ -24,6 +24,38 @@ colorCorrection.Contrast = 0
 colorCorrection.Parent = Lighting
 colorCorrection.Enabled = false
 
+-- Crea la vignette (inizialmente disabilitata)
+local vignette = Instance.new("DepthOfFieldEffect")
+vignette.FarIntensity = 0
+vignette.FocusDistance = 0.1
+vignette.InFocusRadius = 30
+vignette.NearIntensity = 0
+vignette.Parent = Lighting
+vignette.Enabled = false
+
+-- Crea il suono dei respiri affannosi
+local breathingSound = Instance.new("Sound")
+breathingSound.SoundId = "rbxasset://sounds/uuhhh.mp3"
+breathingSound.Volume = 0.3
+breathingSound.Looped = true
+breathingSound.Parent = player:WaitForChild("PlayerGui")
+
+-- Crea il suono del vento
+local windSound = Instance.new("Sound")
+windSound.SoundId = "rbxassetid://3126502868" -- Wind ambient sound
+windSound.Volume = 0
+windSound.Looped = true
+windSound.Parent = workspace
+windSound:Play()
+
+-- Crea il suono distante
+local distantSound = Instance.new("Sound")
+distantSound.SoundId = "rbxassetid://9120386436" -- Distant rumble
+distantSound.Volume = 0
+distantSound.Looped = true
+distantSound.Parent = workspace
+distantSound:Play()
+
 -- Salva le impostazioni originali del Lighting
 local originalAmbient = Lighting.Ambient
 local originalOutdoorAmbient = Lighting.OutdoorAmbient
@@ -37,69 +69,139 @@ local apocalypseAmbient = Color3.fromRGB(255, 150, 50)
 local apocalypseOutdoorAmbient = Color3.fromRGB(255, 180, 80)
 local apocalypseFogColor = Color3.fromRGB(255, 140, 40)
 
--- Funzione per avviare gli effetti visivi dell'apocalisse
-local function startVisualEffects()
-	print("Visual effects activated")
+-- PHASE 1: 20 minutes - Yellow sky, bigger sun, light wind
+local function startPhase1()
+	print("Phase 1: Yellow sky and light wind")
 
-	-- Attiva il blur molto leggero
-	blurEffect.Enabled = true
-	local blurTween = TweenService:Create(
-		blurEffect,
-		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
-		{Size = 3} -- Blur molto leggero
-	)
-	blurTween:Play()
+	local tweenTime = TweenInfo.new(10, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
-	-- Cambia l'atmosfera con tween
-	local lightingTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-
-	-- Tween per Ambient
-	local ambientTween = TweenService:Create(
-		Lighting,
-		lightingTweenInfo,
-		{Ambient = apocalypseAmbient}
-	)
+	-- Yellow sky
+	local ambientTween = TweenService:Create(Lighting, tweenTime, {Ambient = Color3.fromRGB(255, 230, 150)})
 	ambientTween:Play()
 
-	-- Tween per OutdoorAmbient
-	local outdoorAmbientTween = TweenService:Create(
-		Lighting,
-		lightingTweenInfo,
-		{OutdoorAmbient = apocalypseOutdoorAmbient}
-	)
+	local outdoorAmbientTween = TweenService:Create(Lighting, tweenTime, {OutdoorAmbient = Color3.fromRGB(255, 240, 180)})
 	outdoorAmbientTween:Play()
 
-	-- Tween per Brightness
-	local brightnessTween = TweenService:Create(
-		Lighting,
-		lightingTweenInfo,
-		{Brightness = 3}
-	)
+	-- Bigger/brighter sun
+	local brightnessTween = TweenService:Create(Lighting, tweenTime, {Brightness = 2.5})
 	brightnessTween:Play()
 
-	-- Tween per FogColor
-	local fogColorTween = TweenService:Create(
-		Lighting,
-		lightingTweenInfo,
-		{FogColor = apocalypseFogColor}
-	)
+	local clockTimeTween = TweenService:Create(Lighting, tweenTime, {ClockTime = 14}) -- Afternoon sun
+	clockTimeTween:Play()
+
+	-- Light wind sound
+	local windVolumeTween = TweenService:Create(windSound, tweenTime, {Volume = 0.15})
+	windVolumeTween:Play()
+end
+
+-- PHASE 2: 10 minutes - Falling ash, distant sounds
+local function startPhase2()
+	print("Phase 2: Falling ash and distant sounds")
+
+	local tweenTime = TweenInfo.new(8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+	-- Darker yellow/orange atmosphere
+	local ambientTween = TweenService:Create(Lighting, tweenTime, {Ambient = Color3.fromRGB(255, 200, 100)})
+	ambientTween:Play()
+
+	local outdoorAmbientTween = TweenService:Create(Lighting, tweenTime, {OutdoorAmbient = Color3.fromRGB(255, 210, 120)})
+	outdoorAmbientTween:Play()
+
+	-- Add fog
+	local fogColorTween = TweenService:Create(Lighting, tweenTime, {FogColor = Color3.fromRGB(200, 180, 140)})
 	fogColorTween:Play()
 
-	-- Tween per FogEnd
-	local fogEndTween = TweenService:Create(
-		Lighting,
-		lightingTweenInfo,
-		{FogEnd = 500}
-	)
+	local fogEndTween = TweenService:Create(Lighting, tweenTime, {FogEnd = 800})
 	fogEndTween:Play()
 
-	-- Rendi il cielo più arancione/giallo
-	local clockTimeTween = TweenService:Create(
-		Lighting,
-		lightingTweenInfo,
-		{ClockTime = 6.5} -- Alba/Tramonto
-	)
+	-- Increase wind
+	local windVolumeTween = TweenService:Create(windSound, tweenTime, {Volume = 0.25})
+	windVolumeTween:Play()
+
+	-- Start distant sounds
+	local distantVolumeTween = TweenService:Create(distantSound, tweenTime, {Volume = 0.2})
+	distantVolumeTween:Play()
+
+	-- Create falling ash particles in the world
+	local ashEmitter = Instance.new("ParticleEmitter")
+	ashEmitter.Name = "FallingAsh"
+	ashEmitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	ashEmitter.Color = ColorSequence.new(Color3.fromRGB(100, 100, 100), Color3.fromRGB(80, 80, 80))
+	ashEmitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 0.5)
+	})
+	ashEmitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	ashEmitter.Lifetime = NumberRange.new(10, 15)
+	ashEmitter.Rate = 10
+	ashEmitter.Speed = NumberRange.new(2, 4)
+	ashEmitter.SpreadAngle = Vector2.new(180, 0)
+	ashEmitter.Rotation = NumberRange.new(0, 360)
+	ashEmitter.RotSpeed = NumberRange.new(-20, 20)
+	ashEmitter.Acceleration = Vector3.new(0, -5, 0)
+	ashEmitter.EmissionDirection = Enum.NormalId.Bottom
+
+	-- Attach to camera so it follows player
+	ashEmitter.Parent = camera
+end
+
+-- PHASE 3: 5 minutes - Heavy breathing, blur, vignette, burning
+local function startPhase3()
+	print("Phase 3: Burning phase - heavy breathing and screen effects")
+
+	local tweenTime = TweenInfo.new(5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+	-- Deep orange/red atmosphere
+	local ambientTween = TweenService:Create(Lighting, tweenTime, {Ambient = apocalypseAmbient})
+	ambientTween:Play()
+
+	local outdoorAmbientTween = TweenService:Create(Lighting, tweenTime, {OutdoorAmbient = apocalypseOutdoorAmbient})
+	outdoorAmbientTween:Play()
+
+	-- Heavy fog
+	local fogColorTween = TweenService:Create(Lighting, tweenTime, {FogColor = apocalypseFogColor})
+	fogColorTween:Play()
+
+	local fogEndTween = TweenService:Create(Lighting, tweenTime, {FogEnd = 400})
+	fogEndTween:Play()
+
+	-- Brightness increase
+	local brightnessTween = TweenService:Create(Lighting, tweenTime, {Brightness = 3})
+	brightnessTween:Play()
+
+	-- Orange sunset
+	local clockTimeTween = TweenService:Create(Lighting, tweenTime, {ClockTime = 6.5})
 	clockTimeTween:Play()
+
+	-- Activate blur
+	blurEffect.Enabled = true
+	local blurTween = TweenService:Create(blurEffect, tweenTime, {Size = 3})
+	blurTween:Play()
+
+	-- Activate vignette
+	vignette.Enabled = true
+	local vignetteTween = TweenService:Create(vignette, tweenTime, {FarIntensity = 0.3, NearIntensity = 0.15})
+	vignetteTween:Play()
+
+	-- Start breathing sound
+	breathingSound:Play()
+
+	-- Increase wind to strong
+	local windVolumeTween = TweenService:Create(windSound, tweenTime, {Volume = 0.4})
+	windVolumeTween:Play()
+
+	-- Increase distant sounds
+	local distantVolumeTween = TweenService:Create(distantSound, tweenTime, {Volume = 0.35})
+	distantVolumeTween:Play()
+end
+
+-- OLD function kept for apocalypse final phase
+local function startVisualEffects()
+	print("Final apocalypse phase")
+	-- This is now triggered at 0:00 when apocalypse actually starts
 end
 
 -- Funzione per resettare gli effetti visivi
@@ -113,6 +215,23 @@ local function resetVisualEffects()
 	-- Disattiva il contrasto
 	colorCorrection.Enabled = false
 	colorCorrection.Contrast = 0
+
+	-- Disattiva vignette
+	vignette.Enabled = false
+	vignette.FarIntensity = 0
+	vignette.NearIntensity = 0
+
+	-- Stop all sounds
+	windSound.Volume = 0
+	distantSound.Volume = 0
+	breathingSound:Stop()
+
+	-- Remove falling ash particles
+	for _, child in pairs(camera:GetChildren()) do
+		if child.Name == "FallingAsh" then
+			child:Destroy()
+		end
+	end
 
 	-- Ripristina le impostazioni originali del Lighting
 	Lighting.Ambient = originalAmbient
@@ -204,14 +323,22 @@ end
 
 -- Ascolta gli eventi dal server
 apocalypseEvent.OnClientEvent:Connect(function(action, data)
-	if action == "start" then
+	if action == "phase_1" then
+		startPhase1()
+	elseif action == "phase_2" then
+		startPhase2()
+	elseif action == "phase_3" then
+		startPhase3()
+	elseif action == "music_start" then
+		startMusicEffects()
+	elseif action == "start" then
 		startVisualEffects()
+	elseif action == "ash" then
+		-- Activate player burning particles (handled by particles script)
 	elseif action == "reset" then
 		resetVisualEffects()
 	elseif action == "announcement" then
 		showAnnouncement(data)
-	elseif action == "music_start" then
-		startMusicEffects()
 	end
 end)
 
