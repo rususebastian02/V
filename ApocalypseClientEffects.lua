@@ -279,6 +279,54 @@ local function startMusicEffects()
 	contrastTween:Play()
 end
 
+-- Function to show dream phrase at start (minimal, eerie style)
+local function showDreamPhrase(message)
+	local screenGui = player.PlayerGui:FindFirstChild("DreamPhraseGui")
+	if not screenGui then
+		screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "DreamPhraseGui"
+		screenGui.Parent = player.PlayerGui
+	end
+
+	-- Remove previous phrases
+	for _, child in pairs(screenGui:GetChildren()) do
+		child:Destroy()
+	end
+
+	-- Create dream phrase text (centered, minimal)
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(0, 600, 0, 80)
+	textLabel.Position = UDim2.new(0.5, -300, 0.5, -40)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text = message
+	textLabel.TextSize = 28
+	textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	textLabel.TextTransparency = 1
+	textLabel.Font = Enum.Font.Gotham
+	textLabel.TextWrapped = true
+	textLabel.Parent = screenGui
+
+	-- Slow fade in
+	local fadeInTween = TweenService:Create(
+		textLabel,
+		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{TextTransparency = 0.2}
+	)
+	fadeInTween:Play()
+
+	wait(5)
+
+	-- Slow fade out
+	local fadeOutTween = TweenService:Create(
+		textLabel,
+		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{TextTransparency = 1}
+	)
+	fadeOutTween:Play()
+	fadeOutTween.Completed:Wait()
+	textLabel:Destroy()
+end
+
 -- Function to show announcements (minimal style)
 local function showAnnouncement(message)
 	local screenGui = player.PlayerGui:FindFirstChild("AnnouncementGui")
@@ -353,6 +401,8 @@ apocalypseEvent.OnClientEvent:Connect(function(action, data)
 		resetVisualEffects()
 	elseif action == "announcement" then
 		showAnnouncement(data)
+	elseif action == "dream_phrase" then
+		showDreamPhrase(data)
 	end
 end)
 

@@ -91,9 +91,27 @@ function resetWorld()
 	startCountdown()
 end
 
+-- Dream phrases to show at the start of each round
+local dreamPhrases = {
+	"This is exactly how it happened in my dream.",
+	"You didn't survive last time either.",
+	"I woke up before this part.",
+	"This part always repeats.",
+	"I've seen this before.",
+	"The dream never changes.",
+	"You were here in my dream too.",
+	"I know how this ends.",
+	"This isn't the first time.",
+	"I remember this moment."
+}
+
 -- Funzione per il countdown
 function startCountdown()
 	print("Countdown started: " .. COUNTDOWN_TIME .. " seconds")
+
+	-- Send random dream phrase to all clients
+	local randomPhrase = dreamPhrases[math.random(1, #dreamPhrases)]
+	apocalypseEvent:FireAllClients("dream_phrase", randomPhrase)
 
 	local timeRemaining = COUNTDOWN_TIME
 
