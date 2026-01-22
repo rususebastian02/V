@@ -122,27 +122,31 @@ local function startPhase2()
 	local distantVolumeTween = TweenService:Create(distantSound, tweenTime, {Volume = 0.2})
 	distantVolumeTween:Play()
 
-	-- Create falling ash particles in the world
+	-- Create falling ash particles in the world (massive amounts)
 	local ashEmitter = Instance.new("ParticleEmitter")
 	ashEmitter.Name = "FallingAsh"
 	ashEmitter.Texture = "rbxasset://textures/particles/smoke_main.dds"
 	ashEmitter.Color = ColorSequence.new(Color3.fromRGB(100, 100, 100), Color3.fromRGB(80, 80, 80))
 	ashEmitter.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.3),
-		NumberSequenceKeypoint.new(1, 0.5)
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(0.5, 0.4),
+		NumberSequenceKeypoint.new(1, 0.3)
 	})
 	ashEmitter.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(0.5, 0.4),
 		NumberSequenceKeypoint.new(1, 1)
 	})
-	ashEmitter.Lifetime = NumberRange.new(10, 15)
-	ashEmitter.Rate = 10
-	ashEmitter.Speed = NumberRange.new(2, 4)
-	ashEmitter.SpreadAngle = Vector2.new(180, 0)
+	ashEmitter.Lifetime = NumberRange.new(8, 12)
+	ashEmitter.Rate = 100 -- Massive amount of ash
+	ashEmitter.Speed = NumberRange.new(8, 15) -- Faster fall
+	ashEmitter.SpreadAngle = Vector2.new(360, 360) -- Random directions
 	ashEmitter.Rotation = NumberRange.new(0, 360)
-	ashEmitter.RotSpeed = NumberRange.new(-20, 20)
-	ashEmitter.Acceleration = Vector3.new(0, -5, 0)
-	ashEmitter.EmissionDirection = Enum.NormalId.Bottom
+	ashEmitter.RotSpeed = NumberRange.new(-100, 100) -- More rotation variation
+	ashEmitter.Acceleration = Vector3.new(0, -15, 0) -- Strong downward pull
+	ashEmitter.EmissionDirection = Enum.NormalId.Top -- Emit from above
+	ashEmitter.Drag = 2 -- Slight air resistance for realism
+	ashEmitter.VelocityInheritance = 0
 
 	-- Attach to camera so it follows player
 	ashEmitter.Parent = camera
