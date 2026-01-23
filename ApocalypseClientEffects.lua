@@ -527,35 +527,65 @@ local function ascensionReveal(chosenPlayerName)
 		if character then
 			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
 			if humanoidRootPart then
-				-- Add levitation effect
-				local bodyVelocity = Instance.new("BodyVelocity")
-				bodyVelocity.Name = "AscensionLevitation"
-				bodyVelocity.Velocity = Vector3.new(0, 5, 0)
-				bodyVelocity.MaxForce = Vector3.new(0, 4000, 0)
-				bodyVelocity.Parent = humanoidRootPart
+				-- Calculate target height (50 studs above current position)
+				local currentPosition = humanoidRootPart.Position
+				local targetHeight = currentPosition.Y + 50
 
-				-- Create broken wings effect (particle emitters)
-				for i = 1, 2 do
-					local wing = Instance.new("ParticleEmitter")
-					wing.Name = "BrokenWing" .. i
-					wing.Texture = "rbxasset://textures/particles/smoke_main.dds"
-					wing.Color = ColorSequence.new(Color3.fromRGB(200, 200, 200), Color3.fromRGB(150, 150, 150))
-					wing.Size = NumberSequence.new({
-						NumberSequenceKeypoint.new(0, 1),
-						NumberSequenceKeypoint.new(0.5, 1.5),
-						NumberSequenceKeypoint.new(1, 0.5)
-					})
-					wing.Transparency = NumberSequence.new({
-						NumberSequenceKeypoint.new(0, 0.3),
-						NumberSequenceKeypoint.new(1, 1)
-					})
-					wing.Lifetime = NumberRange.new(1, 2)
-					wing.Rate = 30
-					wing.Speed = NumberRange.new(2, 5)
-					wing.SpreadAngle = Vector2.new(30, 30)
-					wing.EmissionDirection = i == 1 and Enum.NormalId.Left or Enum.NormalId.Right
-					wing.Parent = humanoidRootPart
-				end
+				-- Smooth levitation with BodyPosition
+				local bodyPosition = Instance.new("BodyPosition")
+				bodyPosition.Name = "AscensionLevitation"
+				bodyPosition.Position = Vector3.new(currentPosition.X, targetHeight, currentPosition.Z)
+				bodyPosition.MaxForce = Vector3.new(0, 50000, 0)
+				bodyPosition.D = 500 -- Damping for smooth movement
+				bodyPosition.P = 10000 -- Power
+				bodyPosition.Parent = humanoidRootPart
+
+				-- Keep character upright
+				local bodyGyro = Instance.new("BodyGyro")
+				bodyGyro.Name = "AscensionGyro"
+				bodyGyro.MaxTorque = Vector3.new(0, 0, 0)
+				bodyGyro.Parent = humanoidRootPart
+
+				-- Load wings from catalog asynchronously
+				spawn(function()
+					local InsertService = game:GetService("InsertService")
+					local success, result = pcall(function()
+						return InsertService:LoadAsset(13940506102)
+					end)
+
+					if success and result then
+						-- Find the wings accessory in the loaded model
+						local wings = result:FindFirstChildOfClass("Accessory")
+						if wings then
+							-- Clone and attach to character
+							local wingsClone = wings:Clone()
+							wingsClone.Name = "AscensionWings"
+
+							-- Set transparency to 0.5 for all parts
+							for _, descendant in pairs(wingsClone:GetDescendants()) do
+								if descendant:IsA("BasePart") or descendant:IsA("MeshPart") then
+									descendant.Transparency = 0.5
+								end
+							end
+
+							-- Attach to character
+							wingsClone.Parent = character
+
+							-- Let Roblox handle the accessory attachment automatically
+							local humanoid = character:FindFirstChild("Humanoid")
+							if humanoid then
+								humanoid:AddAccessory(wingsClone)
+							end
+
+							print("Wings loaded and attached")
+						else
+							warn("Wings accessory not found in loaded asset")
+						end
+						result:Destroy()
+					else
+						warn("Failed to load wings: " .. tostring(result))
+					end
+				end)
 			end
 		end
 	end
@@ -581,18 +611,22 @@ local function ascensionAlone()
 		if character then
 			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
 			if humanoidRootPart then
-				-- Remove levitation
-				local bodyVelocity = humanoidRootPart:FindFirstChild("AscensionLevitation")
-				if bodyVelocity then
-					bodyVelocity:Destroy()
+				-- Remove levitation systems
+				local bodyPosition = humanoidRootPart:FindFirstChild("AscensionLevitation")
+				if bodyPosition then
+					bodyPosition:Destroy()
 				end
 
-				-- Remove wings
-				for _, child in pairs(humanoidRootPart:GetChildren()) do
-					if child.Name:match("BrokenWing") then
-						child:Destroy()
-					end
+				local bodyGyro = humanoidRootPart:FindFirstChild("AscensionGyro")
+				if bodyGyro then
+					bodyGyro:Destroy()
 				end
+			end
+
+			-- Remove wings accessory
+			local wings = character:FindFirstChild("AscensionWings")
+			if wings then
+				wings:Destroy()
 			end
 		end
 
