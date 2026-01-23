@@ -13,11 +13,17 @@ local dreamPhrasesDataStore = DataStoreService:GetDataStore("DreamPhrasesSeenV1"
 local ALL_DREAMS_BADGE_ID = 0 -- CAMBIA QUESTO CON L'ID DEL TUO BADGE (Dream Collector)
 local WELCOME_BADGE_ID = 515603571785681 -- Welcome badge
 local DREAMER_BADGE_ID = 3190667505182002 -- First apocalypse completion badge
+local ASCENSION_BADGE_ID = 2946712324529139 -- The Ascension badge
 
 -- Configurazione
 local COUNTDOWN_TIME = 30 * 60 -- 30 minuti in secondi
 local DAMAGE_PER_SECOND = 5 -- Danno inflitto ai player durante l'apocalisse
 local APOCALYPSE_DURATION = 15 -- Durata dell'apocalisse in secondi
+
+-- THE ASCENSION event configuration
+local roundCount = 0
+local nextAscensionRound = math.random(20, 30)
+local ascendedPlayer = nil
 
 -- Eventi remoti per comunicare con i client
 local apocalypseEvent = Instance.new("RemoteEvent")
@@ -36,6 +42,50 @@ apocalypseMusic.SoundId = "rbxassetid://9041785975"
 apocalypseMusic.Volume = 0.5
 apocalypseMusic.Looped = true
 apocalypseMusic.Parent = workspace
+
+-- THE ASCENSION event trigger
+local function triggerAscension()
+	print("THE ASCENSION event triggered!")
+
+	-- Phase 1: -35s to -30s - Prepare (audio lowers, wind stops)
+	apocalypseEvent:FireAllClients("ascension_prepare")
+
+	-- Phase 2: -30s - Warning
+	wait(5)
+	apocalypseEvent:FireAllClients("ascension_warning")
+
+	-- Phase 3: -28s - Silent player selection (choose random player)
+	wait(2)
+	local playersList = Players:GetPlayers()
+	if #playersList > 0 then
+		ascendedPlayer = playersList[math.random(1, #playersList)]
+		print("Ascended player chosen: " .. ascendedPlayer.Name)
+
+		-- Phase 4: -20s - Chosen player sees desaturation
+		wait(8)
+		apocalypseEvent:FireClient(ascendedPlayer, "ascension_chosen")
+
+		-- Award Ascension badge
+		local success, hasBadge = pcall(function()
+			return BadgeService:UserHasBadgeAsync(ascendedPlayer.UserId, ASCENSION_BADGE_ID)
+		end)
+
+		if success and not hasBadge then
+			pcall(function()
+				BadgeService:AwardBadge(ascendedPlayer.UserId, ASCENSION_BADGE_ID)
+				print("Ascension badge awarded to " .. ascendedPlayer.Name)
+				apocalypseEvent:FireClient(ascendedPlayer, "badge_unlocked", "The Ascension")
+			end)
+		end
+
+		-- Phase 5: -15s - Global reveal
+		wait(5)
+		apocalypseEvent:FireAllClients("ascension_reveal", ascendedPlayer.Name)
+
+		-- Phase 6: Continue countdown to 0, then apocalypse with ascended surviving
+		-- (handled in main countdown logic)
+	end
+end
 
 -- Funzione per avviare l'apocalisse
 local function startApocalypse()
@@ -65,23 +115,46 @@ local function startApocalypse()
 	end
 
 	-- Assicurati che tutti i player siano morti e award dreamer badge
+	-- If THE ASCENSION event is active, spare the ascended player
 	for _, player in pairs(Players:GetPlayers()) do
 		if player.Character and player.Character:FindFirstChild("Humanoid") then
-			player.Character.Humanoid.Health = 0
+			-- Skip the ascended player for now if THE ASCENSION is active
+			if not (ascendedPlayer and player == ascendedPlayer) then
+				player.Character.Humanoid.Health = 0
 
-			-- Award Dreamer badge for completing first apocalypse
-			local success, hasBadge = pcall(function()
-				return BadgeService:UserHasBadgeAsync(player.UserId, DREAMER_BADGE_ID)
-			end)
-
-			if success and not hasBadge then
-				pcall(function()
-					BadgeService:AwardBadge(player.UserId, DREAMER_BADGE_ID)
-					print("Dreamer badge awarded to " .. player.Name)
-					apocalypseEvent:FireClient(player, "badge_unlocked", "Dreamer")
+				-- Award Dreamer badge for completing first apocalypse
+				local success, hasBadge = pcall(function()
+					return BadgeService:UserHasBadgeAsync(player.UserId, DREAMER_BADGE_ID)
 				end)
+
+				if success and not hasBadge then
+					pcall(function()
+						BadgeService:AwardBadge(player.UserId, DREAMER_BADGE_ID)
+						print("Dreamer badge awarded to " .. player.Name)
+						apocalypseEvent:FireClient(player, "badge_unlocked", "Dreamer")
+					end)
+				end
 			end
 		end
+	end
+
+	-- If THE ASCENSION event is active, handle ascended player alone
+	if ascendedPlayer then
+		print("Ascended player " .. ascendedPlayer.Name .. " remains alone")
+		wait(3)
+
+		-- Show final message to ascended player
+		apocalypseEvent:FireClient(ascendedPlayer, "ascension_alone")
+
+		wait(2)
+
+		-- Now kill the ascended player
+		if ascendedPlayer.Character and ascendedPlayer.Character:FindFirstChild("Humanoid") then
+			ascendedPlayer.Character.Humanoid.Health = 0
+		end
+
+		-- Reset ascended player variable
+		ascendedPlayer = nil
 	end
 
 	print("All players eliminated. Resetting world...")
@@ -232,6 +305,19 @@ end)
 function startCountdown()
 	print("Countdown started: " .. COUNTDOWN_TIME .. " seconds")
 
+	-- Increment round count
+	roundCount = roundCount + 1
+	print("Round " .. roundCount .. " started")
+
+	-- Check if THE ASCENSION should trigger this round
+	local shouldTriggerAscension = false
+	if roundCount >= nextAscensionRound and #Players:GetPlayers() >= 10 then
+		shouldTriggerAscension = true
+		print("THE ASCENSION will trigger this round!")
+		-- Set next ascension for 20-30 rounds from now
+		nextAscensionRound = roundCount + math.random(20, 30)
+	end
+
 	-- Send random dream phrase to all clients
 	local randomIndex = math.random(1, #dreamPhrases)
 	local randomPhrase = dreamPhrases[randomIndex]
@@ -265,6 +351,12 @@ function startCountdown()
 			print("Phase 3: Burning phase started")
 			apocalypseEvent:FireAllClients("phase_3")
 			apocalypseEvent:FireAllClients("announcement", "5 minutes remaining")
+		end
+
+		-- THE ASCENSION event trigger at 35 seconds
+		if timeRemaining == 35 and shouldTriggerAscension then
+			print("Triggering THE ASCENSION event at 35 seconds")
+			triggerAscension()
 		end
 
 		-- Start music at 2:40 remaining

@@ -467,6 +467,140 @@ local function showAnnouncement(message)
 	textLabel:Destroy()
 end
 
+-- THE ASCENSION EVENT FUNCTIONS
+-- Reference to the chosen player for ascension (for local effects)
+local isAscendedPlayer = false
+
+-- Ascension Phase 1: Prepare (-35s to -30s) - Audio lowers, wind stops
+local function ascensionPrepare()
+	print("THE ASCENSION: Prepare phase")
+
+	-- Lower all audio volumes gradually
+	local tweenInfo = TweenInfo.new(5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+
+	local windVolumeTween = TweenService:Create(windSound, tweenInfo, {Volume = 0})
+	windVolumeTween:Play()
+
+	local distantVolumeTween = TweenService:Create(distantSound, tweenInfo, {Volume = 0})
+	distantVolumeTween:Play()
+
+	if breathingSound.Playing then
+		local breathingTween = TweenService:Create(breathingSound, tweenInfo, {Volume = 0})
+		breathingTween:Play()
+	end
+end
+
+-- Ascension Phase 2: Warning (-30s) - "Something is wrong."
+local function ascensionWarning()
+	print("THE ASCENSION: Warning phase")
+	showAnnouncement("Something is wrong.")
+end
+
+-- Ascension Phase 3: Chosen (-20s) - Only chosen player sees desaturation
+local function ascensionChosen()
+	print("THE ASCENSION: Chosen phase - I am chosen")
+	isAscendedPlayer = true
+
+	-- Desaturate colors
+	if not colorCorrection.Enabled then
+		colorCorrection.Enabled = true
+	end
+
+	local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	local desaturationTween = TweenService:Create(colorCorrection, tweenInfo, {Saturation = -1})
+	desaturationTween:Play()
+
+	wait(1)
+	showDreamPhrase("You are still here.")
+end
+
+-- Ascension Phase 4: Reveal (-15s) - Everyone sees the ascended player
+local function ascensionReveal(chosenPlayerName)
+	print("THE ASCENSION: Reveal phase - " .. chosenPlayerName .. " is the ascended")
+
+	-- Show announcement to everyone
+	showAnnouncement("One will remain.")
+
+	-- If I'm the ascended player, add wings and levitate
+	if isAscendedPlayer then
+		local character = player.Character
+		if character then
+			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+			if humanoidRootPart then
+				-- Add levitation effect
+				local bodyVelocity = Instance.new("BodyVelocity")
+				bodyVelocity.Name = "AscensionLevitation"
+				bodyVelocity.Velocity = Vector3.new(0, 5, 0)
+				bodyVelocity.MaxForce = Vector3.new(0, 4000, 0)
+				bodyVelocity.Parent = humanoidRootPart
+
+				-- Create broken wings effect (particle emitters)
+				for i = 1, 2 do
+					local wing = Instance.new("ParticleEmitter")
+					wing.Name = "BrokenWing" .. i
+					wing.Texture = "rbxasset://textures/particles/smoke_main.dds"
+					wing.Color = ColorSequence.new(Color3.fromRGB(200, 200, 200), Color3.fromRGB(150, 150, 150))
+					wing.Size = NumberSequence.new({
+						NumberSequenceKeypoint.new(0, 1),
+						NumberSequenceKeypoint.new(0.5, 1.5),
+						NumberSequenceKeypoint.new(1, 0.5)
+					})
+					wing.Transparency = NumberSequence.new({
+						NumberSequenceKeypoint.new(0, 0.3),
+						NumberSequenceKeypoint.new(1, 1)
+					})
+					wing.Lifetime = NumberRange.new(1, 2)
+					wing.Rate = 30
+					wing.Speed = NumberRange.new(2, 5)
+					wing.SpreadAngle = Vector2.new(30, 30)
+					wing.EmissionDirection = i == 1 and Enum.NormalId.Left or Enum.NormalId.Right
+					wing.Parent = humanoidRootPart
+				end
+			end
+		end
+	end
+end
+
+-- Ascension Phase 5: Death (0s) - Apocalypse happens, ascended survives
+local function ascensionDeath()
+	print("THE ASCENSION: Death phase")
+	-- Visual effects handled by normal apocalypse start
+	-- Ascended player won't die (handled by server)
+end
+
+-- Ascension Phase 6: Alone (+3s) - Only ascended sees final message then dies
+local function ascensionAlone()
+	print("THE ASCENSION: Alone phase - final message")
+
+	if isAscendedPlayer then
+		showDreamPhrase("Wake up.")
+
+		-- Remove levitation and wings after a moment
+		wait(2)
+		local character = player.Character
+		if character then
+			local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+			if humanoidRootPart then
+				-- Remove levitation
+				local bodyVelocity = humanoidRootPart:FindFirstChild("AscensionLevitation")
+				if bodyVelocity then
+					bodyVelocity:Destroy()
+				end
+
+				-- Remove wings
+				for _, child in pairs(humanoidRootPart:GetChildren()) do
+					if child.Name:match("BrokenWing") then
+						child:Destroy()
+					end
+				end
+			end
+		end
+
+		-- Reset ascended status
+		isAscendedPlayer = false
+	end
+end
+
 -- Ascolta gli eventi dal server
 apocalypseEvent.OnClientEvent:Connect(function(action, data)
 	if action == "phase_1" then
@@ -489,6 +623,19 @@ apocalypseEvent.OnClientEvent:Connect(function(action, data)
 		showDreamPhrase(data)
 	elseif action == "badge_unlocked" then
 		showBadgeUnlock(data)
+	-- THE ASCENSION event handlers
+	elseif action == "ascension_prepare" then
+		ascensionPrepare()
+	elseif action == "ascension_warning" then
+		ascensionWarning()
+	elseif action == "ascension_chosen" then
+		ascensionChosen()
+	elseif action == "ascension_reveal" then
+		ascensionReveal(data)
+	elseif action == "ascension_death" then
+		ascensionDeath()
+	elseif action == "ascension_alone" then
+		ascensionAlone()
 	end
 end)
 
