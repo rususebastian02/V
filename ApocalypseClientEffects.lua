@@ -546,44 +546,22 @@ local function ascensionReveal(chosenPlayerName)
 				bodyGyro.MaxTorque = Vector3.new(0, 0, 0)
 				bodyGyro.Parent = humanoidRootPart
 
-				-- Load wings from catalog asynchronously
+				-- Get wings from ReplicatedStorage (loaded by server)
 				spawn(function()
-					local InsertService = game:GetService("InsertService")
-					local success, result = pcall(function()
-						return InsertService:LoadAsset(13940506102)
-					end)
+					local wingsTemplate = ReplicatedStorage:WaitForChild("AscensionWings", 5)
+					if wingsTemplate then
+						-- Clone and attach to character
+						local wingsClone = wingsTemplate:Clone()
+						wingsClone.Name = "AscensionWingsEquipped"
 
-					if success and result then
-						-- Find the wings accessory in the loaded model
-						local wings = result:FindFirstChildOfClass("Accessory")
-						if wings then
-							-- Clone and attach to character
-							local wingsClone = wings:Clone()
-							wingsClone.Name = "AscensionWings"
-
-							-- Set transparency to 0.5 for all parts
-							for _, descendant in pairs(wingsClone:GetDescendants()) do
-								if descendant:IsA("BasePart") or descendant:IsA("MeshPart") then
-									descendant.Transparency = 0.5
-								end
-							end
-
-							-- Attach to character
-							wingsClone.Parent = character
-
-							-- Let Roblox handle the accessory attachment automatically
-							local humanoid = character:FindFirstChild("Humanoid")
-							if humanoid then
-								humanoid:AddAccessory(wingsClone)
-							end
-
-							print("Wings loaded and attached")
-						else
-							warn("Wings accessory not found in loaded asset")
+						-- Attach to character
+						local humanoid = character:FindFirstChild("Humanoid")
+						if humanoid then
+							humanoid:AddAccessory(wingsClone)
+							print("Wings attached to character")
 						end
-						result:Destroy()
 					else
-						warn("Failed to load wings: " .. tostring(result))
+						warn("Ascension wings not found in ReplicatedStorage")
 					end
 				end)
 			end
@@ -624,7 +602,7 @@ local function ascensionAlone()
 			end
 
 			-- Remove wings accessory
-			local wings = character:FindFirstChild("AscensionWings")
+			local wings = character:FindFirstChild("AscensionWingsEquipped")
 			if wings then
 				wings:Destroy()
 			end

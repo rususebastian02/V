@@ -43,6 +43,36 @@ apocalypseMusic.Volume = 0.5
 apocalypseMusic.Looped = true
 apocalypseMusic.Parent = workspace
 
+-- Load ascension wings from catalog (server-side)
+local ascensionWingsTemplate = nil
+spawn(function()
+	local InsertService = game:GetService("InsertService")
+	local success, result = pcall(function()
+		return InsertService:LoadAsset(13940506102)
+	end)
+
+	if success and result then
+		local wings = result:FindFirstChildOfClass("Accessory")
+		if wings then
+			ascensionWingsTemplate = wings:Clone()
+			ascensionWingsTemplate.Name = "AscensionWings"
+
+			-- Set transparency to 0.5 for all parts
+			for _, descendant in pairs(ascensionWingsTemplate:GetDescendants()) do
+				if descendant:IsA("BasePart") or descendant:IsA("MeshPart") then
+					descendant.Transparency = 0.5
+				end
+			end
+
+			ascensionWingsTemplate.Parent = ReplicatedStorage
+			print("Ascension wings loaded successfully")
+		end
+		result:Destroy()
+	else
+		warn("Failed to load ascension wings: " .. tostring(result))
+	end
+end)
+
 -- THE ASCENSION event trigger
 local function triggerAscension()
 	print("THE ASCENSION event triggered!")
