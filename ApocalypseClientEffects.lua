@@ -546,24 +546,8 @@ local function ascensionReveal(chosenPlayerName)
 				bodyGyro.MaxTorque = Vector3.new(0, 0, 0)
 				bodyGyro.Parent = humanoidRootPart
 
-				-- Get wings from ReplicatedStorage (loaded by server)
-				spawn(function()
-					local wingsTemplate = ReplicatedStorage:WaitForChild("AscensionWings", 5)
-					if wingsTemplate then
-						-- Clone and attach to character
-						local wingsClone = wingsTemplate:Clone()
-						wingsClone.Name = "AscensionWingsEquipped"
-
-						-- Attach to character
-						local humanoid = character:FindFirstChild("Humanoid")
-						if humanoid then
-							humanoid:AddAccessory(wingsClone)
-							print("Wings attached to character")
-						end
-					else
-						warn("Ascension wings not found in ReplicatedStorage")
-					end
-				end)
+				-- Wings are created by server
+				print("Levitation started, wings created by server")
 			end
 		end
 	end
@@ -601,10 +585,15 @@ local function ascensionAlone()
 				end
 			end
 
-			-- Remove wings accessory
-			local wings = character:FindFirstChild("AscensionWingsEquipped")
-			if wings then
-				wings:Destroy()
+			-- Remove wings created by server
+			local leftWing = character:FindFirstChild("LeftAscensionWing")
+			if leftWing then
+				leftWing:Destroy()
+			end
+
+			local rightWing = character:FindFirstChild("RightAscensionWing")
+			if rightWing then
+				rightWing:Destroy()
 			end
 		end
 

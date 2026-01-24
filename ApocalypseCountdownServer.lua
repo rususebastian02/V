@@ -43,35 +43,60 @@ apocalypseMusic.Volume = 0.5
 apocalypseMusic.Looped = true
 apocalypseMusic.Parent = workspace
 
--- Load ascension wings from catalog (server-side)
-local ascensionWingsTemplate = nil
-spawn(function()
-	local InsertService = game:GetService("InsertService")
-	local success, result = pcall(function()
-		return InsertService:LoadAsset(13940506102)
-	end)
+-- Create custom ascension wings (server-side function)
+local function createAscensionWings(character)
+	local upperTorso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+	if not upperTorso then return end
 
-	if success and result then
-		local wings = result:FindFirstChildOfClass("Accessory")
-		if wings then
-			ascensionWingsTemplate = wings:Clone()
-			ascensionWingsTemplate.Name = "AscensionWings"
+	-- Create left wing
+	local leftWing = Instance.new("Part")
+	leftWing.Name = "LeftAscensionWing"
+	leftWing.Size = Vector3.new(0.2, 4, 2)
+	leftWing.Transparency = 0.5
+	leftWing.CanCollide = false
+	leftWing.Color = Color3.fromRGB(220, 220, 220)
+	leftWing.Material = Enum.Material.Neon
+	leftWing.Parent = character
 
-			-- Set transparency to 0.5 for all parts
-			for _, descendant in pairs(ascensionWingsTemplate:GetDescendants()) do
-				if descendant:IsA("BasePart") or descendant:IsA("MeshPart") then
-					descendant.Transparency = 0.5
-				end
-			end
+	local leftWeld = Instance.new("Weld")
+	leftWeld.Part0 = upperTorso
+	leftWeld.Part1 = leftWing
+	leftWeld.C0 = CFrame.new(-1, 0.5, -0.5) * CFrame.Angles(0, math.rad(-30), math.rad(-20))
+	leftWeld.Parent = leftWing
 
-			ascensionWingsTemplate.Parent = ReplicatedStorage
-			print("Ascension wings loaded successfully")
-		end
-		result:Destroy()
-	else
-		warn("Failed to load ascension wings: " .. tostring(result))
+	-- Create right wing
+	local rightWing = Instance.new("Part")
+	rightWing.Name = "RightAscensionWing"
+	rightWing.Size = Vector3.new(0.2, 4, 2)
+	rightWing.Transparency = 0.5
+	rightWing.CanCollide = false
+	rightWing.Color = Color3.fromRGB(220, 220, 220)
+	rightWing.Material = Enum.Material.Neon
+	rightWing.Parent = character
+
+	local rightWeld = Instance.new("Weld")
+	rightWeld.Part0 = upperTorso
+	rightWeld.Part1 = rightWing
+	rightWeld.C0 = CFrame.new(1, 0.5, -0.5) * CFrame.Angles(0, math.rad(30), math.rad(20))
+	rightWeld.Parent = rightWing
+
+	-- Add particle effects to wings
+	for _, wing in pairs({leftWing, rightWing}) do
+		local particles = Instance.new("ParticleEmitter")
+		particles.Texture = "rbxasset://textures/particles/smoke_main.dds"
+		particles.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(200, 200, 200))
+		particles.Size = NumberSequence.new(0.3, 0.1)
+		particles.Transparency = NumberSequence.new(0.3, 1)
+		particles.Lifetime = NumberRange.new(0.5, 1)
+		particles.Rate = 20
+		particles.Speed = NumberRange.new(1, 3)
+		particles.SpreadAngle = Vector2.new(30, 30)
+		particles.Parent = wing
 	end
-end)
+
+	print("Ascension wings created for " .. character.Name)
+	return {leftWing, rightWing}
+end
 
 -- THE ASCENSION event trigger
 local function triggerAscension()
@@ -111,6 +136,11 @@ local function triggerAscension()
 		-- Phase 5: -15s - Global reveal
 		wait(5)
 		apocalypseEvent:FireAllClients("ascension_reveal", ascendedPlayer.Name)
+
+		-- Create wings on the ascended player's character
+		if ascendedPlayer.Character then
+			createAscensionWings(ascendedPlayer.Character)
+		end
 
 		-- Phase 6: Continue countdown to 0, then apocalypse with ascended surviving
 		-- (handled in main countdown logic)
@@ -177,6 +207,17 @@ local function startApocalypse()
 		apocalypseEvent:FireClient(ascendedPlayer, "ascension_alone")
 
 		wait(2)
+
+		-- Remove wings before death
+		if ascendedPlayer.Character then
+			local leftWing = ascendedPlayer.Character:FindFirstChild("LeftAscensionWing")
+			if leftWing then leftWing:Destroy() end
+
+			local rightWing = ascendedPlayer.Character:FindFirstChild("RightAscensionWing")
+			if rightWing then rightWing:Destroy() end
+		end
+
+		wait(0.5)
 
 		-- Now kill the ascended player
 		if ascendedPlayer.Character and ascendedPlayer.Character:FindFirstChild("Humanoid") then
