@@ -1,46 +1,42 @@
 --[[
     LIFE TEXT RPG - Sistema Reputazione
     Il cuore assoluto del gioco.
-
-    Range: -10.000 (Cremisi) ⇄ +10.000 (Celeste)
-    Il player diventa ciò che sceglie, non ciò che dichiara.
+    Range: -10.000 (Cremisi) <-> +10.000 (Celeste)
 ]]
 
 local ReputationSystem = {}
 
--- Costanti
 ReputationSystem.MIN = -10000
 ReputationSystem.MAX = 10000
 ReputationSystem.START = 0
 
 -- Soglie narrative
 ReputationSystem.Thresholds = {
-    FIRST_JUDGMENT = 250,      -- Primo giudizio del mondo
-    FACTION_RECOGNIZED = 1000, -- Fazione riconosciuta
-    GUILD_ACCESS = 3000,       -- Accesso alle gilde
-    ELITE = 6000,              -- Status elite
-    LEGEND = 9000,             -- Leggenda vivente
+    FIRST_JUDGMENT = 250,
+    FACTION_RECOGNIZED = 1000,
+    GUILD_ACCESS = 3000,
+    ELITE = 6000,
+    LEGEND = 9000,
 }
 
--- Titoli Celesti (positivi)
+-- Titoli Celesti
 ReputationSystem.CelesteTitles = {
-    { threshold = 1000,  title = "Protettore",         description = "Difendi chi non può difendersi" },
-    { threshold = 2500,  title = "Giudice",            description = "La tua parola porta equilibrio" },
-    { threshold = 5000,  title = "Redentore",          description = "Offri seconde possibilità" },
-    { threshold = 7500,  title = "Martire",            description = "Sacrifichi te stesso per altri" },
-    { threshold = 9500,  title = "Araldo della Luce",  description = "Sei la speranza incarnata" },
+    { threshold = 1000,  title = "Protettore",        description = "Difendi chi non puo' difendersi" },
+    { threshold = 2500,  title = "Giudice",           description = "La tua parola porta equilibrio" },
+    { threshold = 5000,  title = "Redentore",         description = "Offri seconde possibilita'" },
+    { threshold = 7500,  title = "Martire",           description = "Sacrifichi te stesso per altri" },
+    { threshold = 9500,  title = "Araldo della Luce", description = "Sei la speranza incarnata" },
 }
 
--- Titoli Cremisi (negativi)
+-- Titoli Cremisi
 ReputationSystem.CremisiTitles = {
-    { threshold = -1000,  title = "Predatore",              description = "Cacci chi è più debole" },
-    { threshold = -2500,  title = "Boia",                   description = "Esegui senza esitazione" },
-    { threshold = -5000,  title = "Tiranno",                description = "Governi con il terrore" },
-    { threshold = -7500,  title = "Flagello",               description = "Lasci solo cenere" },
+    { threshold = -1000,  title = "Predatore",               description = "Cacci chi e' piu' debole" },
+    { threshold = -2500,  title = "Boia",                    description = "Esegui senza esitazione" },
+    { threshold = -5000,  title = "Tiranno",                 description = "Governi con il terrore" },
+    { threshold = -7500,  title = "Flagello",                description = "Lasci solo cenere" },
     { threshold = -9500,  title = "Incarnazione del Terrore", description = "Il tuo nome non viene pronunciato" },
 }
 
--- Determina la fazione del giocatore
 function ReputationSystem.GetFaction(reputation)
     if reputation > 0 then
         return "Celeste"
@@ -51,7 +47,6 @@ function ReputationSystem.GetFaction(reputation)
     end
 end
 
--- Ottieni il titolo corrente
 function ReputationSystem.GetTitle(reputation)
     local titles
     local absRep = math.abs(reputation)
@@ -73,7 +68,6 @@ function ReputationSystem.GetTitle(reputation)
     return currentTitle
 end
 
--- Ottieni la soglia narrativa raggiunta
 function ReputationSystem.GetNarrativeStage(reputation)
     local absRep = math.abs(reputation)
 
@@ -92,13 +86,11 @@ function ReputationSystem.GetNarrativeStage(reputation)
     end
 end
 
--- Genera descrizione dinamica del giocatore
 function ReputationSystem.GetPlayerDescription(reputation)
-    local faction = ReputationSystem.GetFaction(reputation)
     local absRep = math.abs(reputation)
+    local faction = ReputationSystem.GetFaction(reputation)
 
-    -- Descrizioni Celesti
-    local celesteDescriptions = {
+    local celesteDesc = {
         [250] = "Qualcuno ha notato la tua gentilezza.",
         [1000] = "Sei noto per aver aiutato chi non poteva difendersi.",
         [3000] = "Il tuo nome porta conforto a chi soffre.",
@@ -106,8 +98,7 @@ function ReputationSystem.GetPlayerDescription(reputation)
         [9000] = "Sei diventato leggenda. I bambini ascoltano le tue gesta.",
     }
 
-    -- Descrizioni Cremisi
-    local cremisiDescriptions = {
+    local cremisiDesc = {
         [250] = "Qualcuno ha notato la tua freddezza.",
         [1000] = "Il tuo nome viene sussurrato, non pronunciato.",
         [3000] = "La gente attraversa la strada quando ti vede.",
@@ -115,7 +106,7 @@ function ReputationSystem.GetPlayerDescription(reputation)
         [9000] = "Sei diventato l'ombra. Il terrore che non ha volto.",
     }
 
-    local descriptions = faction == "Celeste" and celesteDescriptions or cremisiDescriptions
+    local descriptions = faction == "Celeste" and celesteDesc or cremisiDesc
     local result = "Nessuno ti conosce ancora."
 
     for threshold, desc in pairs(descriptions) do
@@ -127,14 +118,12 @@ function ReputationSystem.GetPlayerDescription(reputation)
     return result
 end
 
--- Applica modifica reputazione con limiti
 function ReputationSystem.ModifyReputation(currentRep, delta)
     local newRep = currentRep + delta
     newRep = math.max(ReputationSystem.MIN, math.min(ReputationSystem.MAX, newRep))
     return newRep
 end
 
--- Calcola se il giocatore può accedere a una zona
 function ReputationSystem.CanAccessZone(reputation, zoneType)
     local faction = ReputationSystem.GetFaction(reputation)
 
@@ -149,12 +138,10 @@ function ReputationSystem.CanAccessZone(reputation, zoneType)
     return false
 end
 
--- Calcola il rischio di entrare in territorio opposto
 function ReputationSystem.GetTerritoryRisk(reputation, zoneType)
     local faction = ReputationSystem.GetFaction(reputation)
     local absRep = math.abs(reputation)
 
-    -- Più sei estremo, più è rischioso entrare nel territorio opposto
     if (faction == "Celeste" and zoneType == "CREMISI_DARK") or
        (faction == "Cremisi" and zoneType == "CELESTE_SAFE") then
         if absRep >= 6000 then

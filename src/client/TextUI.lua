@@ -1,485 +1,597 @@
 --[[
-    LIFE TEXT RPG - UI Testuale
-    Interfaccia utente per il gioco.
+    LIFE TEXT RPG - UI Testuale Minimal
+    Design pulito ed elegante che cambia con la fazione.
 
-    L'UI cambia in base alla fazione:
-    - Celeste: UI fredda, luce, blu
-    - Cremisi: UI calda, rossa, distorta
+    Celeste: Toni freddi, blu, minimal, luce
+    Cremisi: Toni caldi, rosso, distorsione sottile
 ]]
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 local TextUI = {}
 TextUI.__index = TextUI
 
--- Colori per fazione
-TextUI.Colors = {
+-- ═══════════════════════════════════════════
+-- PALETTE COLORI
+-- ═══════════════════════════════════════════
+
+TextUI.Themes = {
+    Neutrale = {
+        bg = Color3.fromRGB(12, 12, 14),
+        bgSecondary = Color3.fromRGB(18, 18, 22),
+        text = Color3.fromRGB(200, 200, 205),
+        textMuted = Color3.fromRGB(120, 120, 130),
+        accent = Color3.fromRGB(100, 100, 110),
+        border = Color3.fromRGB(40, 40, 45),
+        positive = Color3.fromRGB(80, 180, 120),
+        negative = Color3.fromRGB(180, 80, 80),
+    },
     Celeste = {
-        background = Color3.fromRGB(15, 25, 45),
-        text = Color3.fromRGB(200, 220, 255),
-        accent = Color3.fromRGB(100, 150, 255),
-        highlight = Color3.fromRGB(150, 200, 255),
-        border = Color3.fromRGB(60, 100, 180),
+        bg = Color3.fromRGB(8, 12, 20),
+        bgSecondary = Color3.fromRGB(12, 18, 30),
+        text = Color3.fromRGB(210, 225, 255),
+        textMuted = Color3.fromRGB(100, 130, 180),
+        accent = Color3.fromRGB(80, 140, 255),
+        border = Color3.fromRGB(30, 50, 90),
+        positive = Color3.fromRGB(80, 200, 255),
+        negative = Color3.fromRGB(255, 100, 100),
     },
     Cremisi = {
-        background = Color3.fromRGB(45, 15, 15),
-        text = Color3.fromRGB(255, 200, 180),
-        accent = Color3.fromRGB(255, 80, 60),
-        highlight = Color3.fromRGB(255, 120, 100),
-        border = Color3.fromRGB(180, 60, 60),
+        bg = Color3.fromRGB(18, 8, 8),
+        bgSecondary = Color3.fromRGB(28, 12, 12),
+        text = Color3.fromRGB(255, 220, 210),
+        textMuted = Color3.fromRGB(180, 100, 90),
+        accent = Color3.fromRGB(255, 60, 40),
+        border = Color3.fromRGB(90, 30, 25),
+        positive = Color3.fromRGB(255, 180, 80),
+        negative = Color3.fromRGB(255, 50, 50),
     },
-    Neutrale = {
-        background = Color3.fromRGB(30, 30, 35),
-        text = Color3.fromRGB(220, 220, 220),
-        accent = Color3.fromRGB(150, 150, 160),
-        highlight = Color3.fromRGB(180, 180, 190),
-        border = Color3.fromRGB(80, 80, 90),
-    }
 }
 
--- Font settings
-TextUI.Fonts = {
-    title = Enum.Font.Antique,
-    body = Enum.Font.Garamond,
-    choice = Enum.Font.SourceSans,
-}
+-- ═══════════════════════════════════════════
+-- COSTRUTTORE
+-- ═══════════════════════════════════════════
 
--- Crea una nuova istanza UI
 function TextUI.new(player)
     local self = setmetatable({}, TextUI)
-
     self.player = player
-    self.currentFaction = "Neutrale"
-    self.screenGui = nil
-    self.mainFrame = nil
-    self.textLabel = nil
-    self.choicesFrame = nil
-    self.statsFrame = nil
-
-    self:Initialize()
-
+    self.currentTheme = "Neutrale"
+    self.elements = {}
+    self:Build()
     return self
 end
 
--- Inizializza l'UI
-function TextUI:Initialize()
+-- ═══════════════════════════════════════════
+-- COSTRUZIONE UI
+-- ═══════════════════════════════════════════
+
+function TextUI:Build()
     local playerGui = self.player:WaitForChild("PlayerGui")
 
-    -- Screen GUI principale
-    self.screenGui = Instance.new("ScreenGui")
-    self.screenGui.Name = "LifeTextRPG"
-    self.screenGui.ResetOnSpawn = false
-    self.screenGui.Parent = playerGui
+    -- ScreenGui principale
+    local screen = Instance.new("ScreenGui")
+    screen.Name = "LIFE_RPG"
+    screen.ResetOnSpawn = false
+    screen.IgnoreGuiInset = true
+    screen.Parent = playerGui
+    self.elements.screen = screen
 
-    -- Frame principale
-    self.mainFrame = Instance.new("Frame")
-    self.mainFrame.Name = "MainFrame"
-    self.mainFrame.Size = UDim2.new(0.7, 0, 0.8, 0)
-    self.mainFrame.Position = UDim2.new(0.15, 0, 0.1, 0)
-    self.mainFrame.BackgroundTransparency = 0.1
-    self.mainFrame.BorderSizePixel = 3
-    self.mainFrame.Parent = self.screenGui
+    -- Container principale (centrato)
+    local main = Instance.new("Frame")
+    main.Name = "Main"
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    main.Size = UDim2.new(0, 700, 0, 500)
+    main.BackgroundTransparency = 0
+    main.BorderSizePixel = 0
+    main.Parent = screen
+    self.elements.main = main
 
-    -- Corner arrotondati
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
-    corner.Parent = self.mainFrame
+    -- Bordo sottile
+    local mainStroke = Instance.new("UIStroke")
+    mainStroke.Thickness = 1
+    mainStroke.Parent = main
 
-    -- Header con titolo e stats
-    self:CreateHeader()
+    -- Angoli arrotondati
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 8)
+    mainCorner.Parent = main
 
-    -- Area testo principale
-    self:CreateTextArea()
+    -- Header
+    self:BuildHeader(main)
 
-    -- Area scelte
-    self:CreateChoicesArea()
+    -- Area contenuto
+    self:BuildContent(main)
+
+    -- Footer con scelte
+    self:BuildFooter(main)
 
     -- Applica tema iniziale
     self:ApplyTheme("Neutrale")
 end
 
--- Crea l'header
-function TextUI:CreateHeader()
+function TextUI:BuildHeader(parent)
     local header = Instance.new("Frame")
     header.Name = "Header"
-    header.Size = UDim2.new(1, 0, 0, 60)
-    header.Position = UDim2.new(0, 0, 0, 0)
-    header.BackgroundTransparency = 0.5
-    header.BorderSizePixel = 0
-    header.Parent = self.mainFrame
+    header.Size = UDim2.new(1, 0, 0, 50)
+    header.BackgroundTransparency = 1
+    header.Parent = parent
+    self.elements.header = header
 
-    -- Titolo del gioco
+    -- Linea separatrice
+    local line = Instance.new("Frame")
+    line.Name = "Line"
+    line.Size = UDim2.new(1, -40, 0, 1)
+    line.Position = UDim2.new(0, 20, 1, -1)
+    line.BorderSizePixel = 0
+    line.Parent = header
+    self.elements.headerLine = line
+
+    -- Titolo gioco (sinistra)
     local title = Instance.new("TextLabel")
-    title.Name = "GameTitle"
-    title.Size = UDim2.new(0.5, 0, 1, 0)
-    title.Position = UDim2.new(0, 20, 0, 0)
+    title.Name = "Title"
+    title.Size = UDim2.new(0.3, 0, 1, 0)
+    title.Position = UDim2.new(0, 25, 0, 0)
     title.BackgroundTransparency = 1
     title.Text = "LIFE"
-    title.Font = TextUI.Fonts.title
-    title.TextSize = 36
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 24
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
+    self.elements.gameTitle = title
 
-    -- Stats frame (reputazione, titolo)
-    self.statsFrame = Instance.new("Frame")
-    self.statsFrame.Name = "Stats"
-    self.statsFrame.Size = UDim2.new(0.45, 0, 1, 0)
-    self.statsFrame.Position = UDim2.new(0.55, 0, 0, 0)
-    self.statsFrame.BackgroundTransparency = 1
-    self.statsFrame.Parent = header
+    -- Stats (destra)
+    local stats = Instance.new("Frame")
+    stats.Name = "Stats"
+    stats.Size = UDim2.new(0.6, 0, 1, 0)
+    stats.Position = UDim2.new(0.4, 0, 0, 0)
+    stats.BackgroundTransparency = 1
+    stats.Parent = header
 
-    -- Label reputazione
-    self.reputationLabel = Instance.new("TextLabel")
-    self.reputationLabel.Name = "Reputation"
-    self.reputationLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    self.reputationLabel.BackgroundTransparency = 1
-    self.reputationLabel.Text = "Reputazione: 0"
-    self.reputationLabel.Font = TextUI.Fonts.body
-    self.reputationLabel.TextSize = 18
-    self.reputationLabel.TextXAlignment = Enum.TextXAlignment.Right
-    self.reputationLabel.Parent = self.statsFrame
+    -- Reputazione
+    local rep = Instance.new("TextLabel")
+    rep.Name = "Reputation"
+    rep.Size = UDim2.new(0.5, 0, 1, 0)
+    rep.BackgroundTransparency = 1
+    rep.Text = "0"
+    rep.Font = Enum.Font.GothamMedium
+    rep.TextSize = 18
+    rep.TextXAlignment = Enum.TextXAlignment.Right
+    rep.Parent = stats
+    self.elements.reputation = rep
 
-    -- Label titolo
-    self.titleLabel = Instance.new("TextLabel")
-    self.titleLabel.Name = "PlayerTitle"
-    self.titleLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    self.titleLabel.Position = UDim2.new(0, 0, 0.5, 0)
-    self.titleLabel.BackgroundTransparency = 1
-    self.titleLabel.Text = "Sconosciuto"
-    self.titleLabel.Font = TextUI.Fonts.body
-    self.titleLabel.TextSize = 16
-    self.titleLabel.TextXAlignment = Enum.TextXAlignment.Right
-    self.titleLabel.Parent = self.statsFrame
+    -- Titolo player
+    local playerTitle = Instance.new("TextLabel")
+    playerTitle.Name = "PlayerTitle"
+    playerTitle.Size = UDim2.new(0.5, -25, 1, 0)
+    playerTitle.Position = UDim2.new(0.5, 0, 0, 0)
+    playerTitle.BackgroundTransparency = 1
+    playerTitle.Text = "Sconosciuto"
+    playerTitle.Font = Enum.Font.GothamMedium
+    playerTitle.TextSize = 14
+    playerTitle.TextXAlignment = Enum.TextXAlignment.Right
+    playerTitle.Parent = stats
+    self.elements.playerTitle = playerTitle
 end
 
--- Crea l'area testo
-function TextUI:CreateTextArea()
-    local textFrame = Instance.new("ScrollingFrame")
-    textFrame.Name = "TextArea"
-    textFrame.Size = UDim2.new(1, -40, 0.55, 0)
-    textFrame.Position = UDim2.new(0, 20, 0, 80)
-    textFrame.BackgroundTransparency = 1
-    textFrame.BorderSizePixel = 0
-    textFrame.ScrollBarThickness = 6
-    textFrame.Parent = self.mainFrame
+function TextUI:BuildContent(parent)
+    local content = Instance.new("Frame")
+    content.Name = "Content"
+    content.Size = UDim2.new(1, -50, 1, -170)
+    content.Position = UDim2.new(0, 25, 0, 60)
+    content.BackgroundTransparency = 1
+    content.Parent = parent
+    self.elements.content = content
 
     -- Titolo evento
-    self.eventTitle = Instance.new("TextLabel")
-    self.eventTitle.Name = "EventTitle"
-    self.eventTitle.Size = UDim2.new(1, 0, 0, 40)
-    self.eventTitle.BackgroundTransparency = 1
-    self.eventTitle.Text = ""
-    self.eventTitle.Font = TextUI.Fonts.title
-    self.eventTitle.TextSize = 28
-    self.eventTitle.TextWrapped = true
-    self.eventTitle.TextYAlignment = Enum.TextYAlignment.Top
-    self.eventTitle.Parent = textFrame
+    local eventTitle = Instance.new("TextLabel")
+    eventTitle.Name = "EventTitle"
+    eventTitle.Size = UDim2.new(1, 0, 0, 35)
+    eventTitle.BackgroundTransparency = 1
+    eventTitle.Text = ""
+    eventTitle.Font = Enum.Font.GothamBold
+    eventTitle.TextSize = 22
+    eventTitle.TextXAlignment = Enum.TextXAlignment.Left
+    eventTitle.TextYAlignment = Enum.TextYAlignment.Top
+    eventTitle.Parent = content
+    self.elements.eventTitle = eventTitle
 
-    -- Testo principale
-    self.textLabel = Instance.new("TextLabel")
-    self.textLabel.Name = "MainText"
-    self.textLabel.Size = UDim2.new(1, 0, 0, 0) -- Auto-size
-    self.textLabel.Position = UDim2.new(0, 0, 0, 50)
-    self.textLabel.BackgroundTransparency = 1
-    self.textLabel.Text = ""
-    self.textLabel.Font = TextUI.Fonts.body
-    self.textLabel.TextSize = 20
-    self.textLabel.TextWrapped = true
-    self.textLabel.TextYAlignment = Enum.TextYAlignment.Top
-    self.textLabel.AutomaticSize = Enum.AutomaticSize.Y
-    self.textLabel.Parent = textFrame
+    -- Testo narrativo (scrollabile)
+    local textScroll = Instance.new("ScrollingFrame")
+    textScroll.Name = "TextScroll"
+    textScroll.Size = UDim2.new(1, 0, 1, -45)
+    textScroll.Position = UDim2.new(0, 0, 0, 40)
+    textScroll.BackgroundTransparency = 1
+    textScroll.BorderSizePixel = 0
+    textScroll.ScrollBarThickness = 3
+    textScroll.ScrollBarImageTransparency = 0.5
+    textScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    textScroll.Parent = content
+    self.elements.textScroll = textScroll
+
+    local storyText = Instance.new("TextLabel")
+    storyText.Name = "StoryText"
+    storyText.Size = UDim2.new(1, -10, 0, 0)
+    storyText.BackgroundTransparency = 1
+    storyText.Text = ""
+    storyText.Font = Enum.Font.Gotham
+    storyText.TextSize = 16
+    storyText.TextXAlignment = Enum.TextXAlignment.Left
+    storyText.TextYAlignment = Enum.TextYAlignment.Top
+    storyText.TextWrapped = true
+    storyText.AutomaticSize = Enum.AutomaticSize.Y
+    storyText.LineHeight = 1.4
+    storyText.Parent = textScroll
+    self.elements.storyText = storyText
 end
 
--- Crea l'area scelte
-function TextUI:CreateChoicesArea()
-    self.choicesFrame = Instance.new("Frame")
-    self.choicesFrame.Name = "ChoicesArea"
-    self.choicesFrame.Size = UDim2.new(1, -40, 0.3, 0)
-    self.choicesFrame.Position = UDim2.new(0, 20, 0.65, 0)
-    self.choicesFrame.BackgroundTransparency = 1
-    self.choicesFrame.Parent = self.mainFrame
+function TextUI:BuildFooter(parent)
+    local footer = Instance.new("Frame")
+    footer.Name = "Footer"
+    footer.Size = UDim2.new(1, -50, 0, 100)
+    footer.Position = UDim2.new(0, 25, 1, -110)
+    footer.BackgroundTransparency = 1
+    footer.Parent = parent
+    self.elements.footer = footer
 
-    -- Layout per le scelte
+    -- Linea separatrice
+    local line = Instance.new("Frame")
+    line.Name = "Line"
+    line.Size = UDim2.new(1, 0, 0, 1)
+    line.Position = UDim2.new(0, 0, 0, 0)
+    line.BorderSizePixel = 0
+    line.Parent = footer
+    self.elements.footerLine = line
+
+    -- Container scelte
+    local choices = Instance.new("Frame")
+    choices.Name = "Choices"
+    choices.Size = UDim2.new(1, 0, 1, -15)
+    choices.Position = UDim2.new(0, 0, 0, 15)
+    choices.BackgroundTransparency = 1
+    choices.Parent = footer
+    self.elements.choices = choices
+
     local layout = Instance.new("UIListLayout")
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 8)
-    layout.Parent = self.choicesFrame
+    layout.Padding = UDim.new(0, 6)
+    layout.Parent = choices
 end
 
--- Applica tema basato sulla fazione
-function TextUI:ApplyTheme(faction)
-    self.currentFaction = faction
-    local colors = TextUI.Colors[faction]
+-- ═══════════════════════════════════════════
+-- TEMA
+-- ═══════════════════════════════════════════
 
-    -- Transizione animata
-    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+function TextUI:ApplyTheme(themeName)
+    self.currentTheme = themeName
+    local theme = TextUI.Themes[themeName]
+    local t = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-    -- Colori main frame
-    TweenService:Create(self.mainFrame, tweenInfo, {
-        BackgroundColor3 = colors.background,
-        BorderColor3 = colors.border
-    }):Play()
+    -- Main background
+    TweenService:Create(self.elements.main, t, { BackgroundColor3 = theme.bg }):Play()
 
-    -- Colori testo
-    local textElements = {
-        self.eventTitle,
-        self.textLabel,
-        self.reputationLabel,
-        self.titleLabel
-    }
-
-    for _, element in ipairs(textElements) do
-        if element then
-            TweenService:Create(element, tweenInfo, {
-                TextColor3 = colors.text
-            }):Play()
-        end
+    -- Stroke
+    local stroke = self.elements.main:FindFirstChildOfClass("UIStroke")
+    if stroke then
+        TweenService:Create(stroke, t, { Color = theme.border }):Play()
     end
 
-    -- Titolo gioco con colore accent
-    local gameTitle = self.mainFrame:FindFirstChild("Header"):FindFirstChild("GameTitle")
-    if gameTitle then
-        TweenService:Create(gameTitle, tweenInfo, {
-            TextColor3 = colors.accent
-        }):Play()
-    end
+    -- Header
+    TweenService:Create(self.elements.gameTitle, t, { TextColor3 = theme.accent }):Play()
+    TweenService:Create(self.elements.headerLine, t, { BackgroundColor3 = theme.border }):Play()
+    TweenService:Create(self.elements.reputation, t, { TextColor3 = theme.text }):Play()
+    TweenService:Create(self.elements.playerTitle, t, { TextColor3 = theme.textMuted }):Play()
 
-    -- Effetto distorsione per Cremisi
-    if faction == "Cremisi" then
-        self:ApplyCremisiEffect()
-    else
-        self:RemoveCremisiEffect()
-    end
+    -- Content
+    TweenService:Create(self.elements.eventTitle, t, { TextColor3 = theme.text }):Play()
+    TweenService:Create(self.elements.storyText, t, { TextColor3 = theme.text }):Play()
+
+    -- Footer
+    TweenService:Create(self.elements.footerLine, t, { BackgroundColor3 = theme.border }):Play()
+
+    -- Scrollbar
+    self.elements.textScroll.ScrollBarImageColor3 = theme.textMuted
+
+    -- Aggiorna bottoni esistenti
+    self:UpdateChoiceButtons()
 end
 
--- Effetto visivo Cremisi (distorsione leggera)
-function TextUI:ApplyCremisiEffect()
-    -- Aggiungi un leggero effetto di "calore"
-    if not self.mainFrame:FindFirstChild("CremisiGlow") then
-        local glow = Instance.new("ImageLabel")
-        glow.Name = "CremisiGlow"
-        glow.Size = UDim2.new(1.1, 0, 1.1, 0)
-        glow.Position = UDim2.new(-0.05, 0, -0.05, 0)
-        glow.BackgroundTransparency = 1
-        glow.Image = "rbxassetid://0" -- Placeholder per effetto glow rosso
-        glow.ImageColor3 = Color3.fromRGB(255, 50, 30)
-        glow.ImageTransparency = 0.9
-        glow.ZIndex = -1
-        glow.Parent = self.mainFrame
-    end
+function TextUI:GetFactionFromRep(rep)
+    if rep > 0 then return "Celeste"
+    elseif rep < 0 then return "Cremisi"
+    else return "Neutrale" end
 end
 
-function TextUI:RemoveCremisiEffect()
-    local glow = self.mainFrame:FindFirstChild("CremisiGlow")
-    if glow then
-        glow:Destroy()
-    end
+-- ═══════════════════════════════════════════
+-- DISPLAY
+-- ═══════════════════════════════════════════
+
+function TextUI:ShowEvent(event)
+    self.currentEvent = event
+    self.elements.eventTitle.Text = event.title or ""
+    self:Typewriter(self.elements.storyText, event.context, 0.015)
+
+    -- Aspetta fine typewriter poi mostra scelte
+    local textLen = #event.context
+    task.delay(textLen * 0.015 + 0.3, function()
+        self:ShowChoices(event.choices)
+    end)
 end
 
--- Mostra un evento
-function TextUI:ShowEvent(event, playerData)
-    -- Aggiorna titolo e testo
-    self.eventTitle.Text = event.title or ""
-
-    -- Effetto typewriter per il testo
-    self:TypewriterEffect(self.textLabel, event.context)
-
-    -- Mostra le scelte
-    self:ShowChoices(event.choices, playerData)
-end
-
--- Effetto typewriter
-function TextUI:TypewriterEffect(label, text, speed)
-    speed = speed or 0.02
-    label.Text = ""
-
-    coroutine.wrap(function()
-        for i = 1, #text do
-            label.Text = string.sub(text, 1, i)
-            wait(speed)
-        end
-    end)()
-end
-
--- Mostra le scelte
-function TextUI:ShowChoices(choices, playerData)
+function TextUI:ShowChoices(choices)
     -- Pulisci scelte precedenti
-    for _, child in ipairs(self.choicesFrame:GetChildren()) do
+    for _, child in ipairs(self.elements.choices:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
         end
     end
 
-    local colors = TextUI.Colors[self.currentFaction]
+    local theme = TextUI.Themes[self.currentTheme]
 
-    -- Crea bottoni per ogni scelta
     for i, choice in ipairs(choices) do
-        local button = Instance.new("TextButton")
-        button.Name = "Choice_" .. choice.id
-        button.Size = UDim2.new(1, 0, 0, 45)
-        button.BackgroundColor3 = colors.background
-        button.BackgroundTransparency = 0.3
-        button.BorderColor3 = colors.border
-        button.BorderSizePixel = 2
-        button.Text = i .. ". " .. choice.text
-        button.Font = TextUI.Fonts.choice
-        button.TextSize = 16
-        button.TextColor3 = colors.text
-        button.TextWrapped = true
-        button.LayoutOrder = i
-        button.Parent = self.choicesFrame
+        local btn = Instance.new("TextButton")
+        btn.Name = "Choice_" .. i
+        btn.Size = UDim2.new(1, 0, 0, 26)
+        btn.BackgroundColor3 = theme.bgSecondary
+        btn.BackgroundTransparency = 0.3
+        btn.BorderSizePixel = 0
+        btn.Text = "  " .. i .. ".  " .. choice.text
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 14
+        btn.TextColor3 = theme.text
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.AutoButtonColor = false
+        btn.LayoutOrder = i
+        btn.Parent = self.elements.choices
 
-        -- Corner arrotondati
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 6)
-        corner.Parent = button
+        corner.CornerRadius = UDim.new(0, 4)
+        corner.Parent = btn
 
-        -- Hover effect
-        button.MouseEnter:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                BackgroundColor3 = colors.highlight,
-                TextColor3 = colors.background
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = 1
+        stroke.Color = theme.border
+        stroke.Transparency = 0.5
+        stroke.Parent = btn
+
+        -- Hover
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                BackgroundColor3 = theme.accent,
+                BackgroundTransparency = 0
+            }):Play()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                TextColor3 = theme.bg
             }):Play()
         end)
 
-        button.MouseLeave:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {
-                BackgroundColor3 = colors.background,
-                TextColor3 = colors.text
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                BackgroundColor3 = theme.bgSecondary,
+                BackgroundTransparency = 0.3
+            }):Play()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                TextColor3 = theme.text
             }):Play()
         end)
 
-        -- Click handler
-        button.MouseButton1Click:Connect(function()
-            self:OnChoiceSelected(choice)
+        -- Click
+        btn.MouseButton1Click:Connect(function()
+            self:OnChoiceClicked(choice)
+        end)
+
+        -- Animazione entrata
+        btn.BackgroundTransparency = 1
+        btn.TextTransparency = 1
+        task.delay(i * 0.08, function()
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundTransparency = 0.3,
+                TextTransparency = 0
+            }):Play()
         end)
     end
 end
 
--- Handler per selezione scelta
-function TextUI:OnChoiceSelected(choice)
-    -- Questo evento verrà connesso al server
+function TextUI:OnChoiceClicked(choice)
+    -- Nascondi scelte
+    for _, child in ipairs(self.elements.choices:GetChildren()) do
+        if child:IsA("TextButton") then
+            TweenService:Create(child, TweenInfo.new(0.15), {
+                BackgroundTransparency = 1,
+                TextTransparency = 1
+            }):Play()
+        end
+    end
+
     if self.OnChoiceCallback then
         self.OnChoiceCallback(choice)
     end
 end
 
--- Mostra la conseguenza di una scelta
 function TextUI:ShowConsequence(result)
-    -- Nascondi scelte
-    for _, child in ipairs(self.choicesFrame:GetChildren()) do
-        if child:IsA("TextButton") then
-            child.Visible = false
-        end
-    end
+    local theme = TextUI.Themes[self.currentTheme]
+    local currentText = self.elements.storyText.Text
 
-    -- Mostra testo conseguenza
+    -- Costruisci testo conseguenza
     local consequenceText = "\n\n" .. result.consequence
 
-    -- Aggiungi info reputazione
+    -- Cambio reputazione
     local repChange = result.reputationChange
-    local repSymbol = repChange >= 0 and "+" or ""
-    consequenceText = consequenceText .. "\n\n[Reputazione: " .. repSymbol .. repChange .. "]"
+    local repColor = repChange >= 0 and "positive" or "negative"
+    local repSign = repChange >= 0 and "+" or ""
+    consequenceText = consequenceText .. "\n\n[" .. repSign .. repChange .. " Reputazione]"
 
     -- Bonus coerenza
     if result.coherenceBonus then
-        consequenceText = consequenceText .. "\n(" .. result.coherenceBonus.name .. ": +" .. result.coherenceBonus.bonusAmount .. " bonus)"
+        consequenceText = consequenceText .. "\n(" .. result.coherenceBonus.name .. ")"
     end
 
     -- Nuovo titolo
     if result.newTitle then
-        consequenceText = consequenceText .. "\n\n*** Nuovo Titolo: " .. result.newTitle.title .. " ***"
-        consequenceText = consequenceText .. "\n" .. result.newTitle.description
+        consequenceText = consequenceText .. "\n\n>> Nuovo Titolo: " .. result.newTitle.title .. " <<"
     end
 
-    self:TypewriterEffect(self.textLabel, self.textLabel.Text .. consequenceText)
+    self:Typewriter(self.elements.storyText, currentText .. consequenceText, 0.02)
 
-    -- Mostra pulsante continua
-    wait(2)
-    self:ShowContinueButton()
+    -- Mostra pulsante continua dopo
+    task.delay(#consequenceText * 0.02 + 1, function()
+        self:ShowContinueButton()
+    end)
 end
 
--- Mostra pulsante continua
 function TextUI:ShowContinueButton()
-    local colors = TextUI.Colors[self.currentFaction]
+    local theme = TextUI.Themes[self.currentTheme]
 
-    local continueBtn = Instance.new("TextButton")
-    continueBtn.Name = "ContinueButton"
-    continueBtn.Size = UDim2.new(0.4, 0, 0, 50)
-    continueBtn.Position = UDim2.new(0.3, 0, 0, 0)
-    continueBtn.BackgroundColor3 = colors.accent
-    continueBtn.Text = "Continua..."
-    continueBtn.Font = TextUI.Fonts.choice
-    continueBtn.TextSize = 20
-    continueBtn.TextColor3 = colors.background
-    continueBtn.Parent = self.choicesFrame
+    -- Pulisci scelte
+    for _, child in ipairs(self.elements.choices:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    local btn = Instance.new("TextButton")
+    btn.Name = "Continue"
+    btn.Size = UDim2.new(0.4, 0, 0, 32)
+    btn.Position = UDim2.new(0.3, 0, 0.5, -16)
+    btn.AnchorPoint = Vector2.new(0, 0)
+    btn.BackgroundColor3 = theme.accent
+    btn.BorderSizePixel = 0
+    btn.Text = "Continua"
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 14
+    btn.TextColor3 = theme.bg
+    btn.Parent = self.elements.choices
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = continueBtn
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
 
-    continueBtn.MouseButton1Click:Connect(function()
-        continueBtn:Destroy()
+    -- Animazione entrata
+    btn.BackgroundTransparency = 1
+    btn.TextTransparency = 1
+    TweenService:Create(btn, TweenInfo.new(0.3), {
+        BackgroundTransparency = 0,
+        TextTransparency = 0
+    }):Play()
+
+    btn.MouseButton1Click:Connect(function()
+        btn:Destroy()
         if self.OnContinueCallback then
             self.OnContinueCallback()
         end
     end)
 end
 
--- Aggiorna display stats
 function TextUI:UpdateStats(playerData)
-    -- Reputazione con colore
     local rep = playerData.reputation
-    local repText = "Reputazione: " .. (rep >= 0 and "+" or "") .. rep
-    self.reputationLabel.Text = repText
+    local sign = rep >= 0 and "+" or ""
+    self.elements.reputation.Text = sign .. tostring(rep)
 
-    -- Titolo
     local title = playerData.currentTitle or "Sconosciuto"
-    self.titleLabel.Text = title
+    self.elements.playerTitle.Text = title
 
-    -- Aggiorna tema se la fazione è cambiata
-    local ReputationSystem = require(game.ReplicatedStorage.Shared.ReputationSystem)
-    local faction = ReputationSystem.GetFaction(rep)
-    if faction ~= self.currentFaction then
-        self:ApplyTheme(faction)
+    -- Cambia tema se necessario
+    local newTheme = self:GetFactionFromRep(rep)
+    if newTheme ~= self.currentTheme then
+        self:ApplyTheme(newTheme)
     end
+
+    -- Colore reputazione
+    local theme = TextUI.Themes[self.currentTheme]
+    local repColor = rep >= 0 and theme.positive or theme.negative
+    if rep == 0 then repColor = theme.textMuted end
+    self.elements.reputation.TextColor3 = repColor
 end
 
--- Mostra messaggio di sistema
 function TextUI:ShowSystemMessage(message, duration)
     duration = duration or 3
 
-    local msgLabel = Instance.new("TextLabel")
-    msgLabel.Name = "SystemMessage"
-    msgLabel.Size = UDim2.new(0.6, 0, 0, 50)
-    msgLabel.Position = UDim2.new(0.2, 0, 0.02, 0)
-    msgLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    msgLabel.BackgroundTransparency = 0.3
-    msgLabel.Text = message
-    msgLabel.Font = TextUI.Fonts.body
-    msgLabel.TextSize = 18
-    msgLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    msgLabel.Parent = self.screenGui
+    local theme = TextUI.Themes[self.currentTheme]
+
+    local msg = Instance.new("TextLabel")
+    msg.Name = "SystemMsg"
+    msg.Size = UDim2.new(0.6, 0, 0, 40)
+    msg.Position = UDim2.new(0.2, 0, 0.05, 0)
+    msg.AnchorPoint = Vector2.new(0, 0)
+    msg.BackgroundColor3 = theme.bgSecondary
+    msg.BorderSizePixel = 0
+    msg.Text = message
+    msg.Font = Enum.Font.Gotham
+    msg.TextSize = 14
+    msg.TextColor3 = theme.text
+    msg.Parent = self.elements.screen
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = msgLabel
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = msg
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 1
+    stroke.Color = theme.border
+    stroke.Parent = msg
+
+    -- Fade in
+    msg.BackgroundTransparency = 1
+    msg.TextTransparency = 1
+    TweenService:Create(msg, TweenInfo.new(0.3), {
+        BackgroundTransparency = 0.2,
+        TextTransparency = 0
+    }):Play()
 
     -- Fade out e rimuovi
-    wait(duration)
-    TweenService:Create(msgLabel, TweenInfo.new(0.5), {
-        BackgroundTransparency = 1,
-        TextTransparency = 1
-    }):Play()
-    wait(0.5)
-    msgLabel:Destroy()
+    task.delay(duration, function()
+        TweenService:Create(msg, TweenInfo.new(0.5), {
+            BackgroundTransparency = 1,
+            TextTransparency = 1
+        }):Play()
+        task.delay(0.5, function()
+            msg:Destroy()
+        end)
+    end)
 end
 
--- Distruggi UI
+-- ═══════════════════════════════════════════
+-- EFFETTI
+-- ═══════════════════════════════════════════
+
+function TextUI:Typewriter(label, text, speed)
+    speed = speed or 0.02
+    label.Text = ""
+
+    task.spawn(function()
+        for i = 1, #text do
+            label.Text = string.sub(text, 1, i)
+
+            -- Aggiorna canvas size
+            local scroll = label.Parent
+            if scroll and scroll:IsA("ScrollingFrame") then
+                scroll.CanvasSize = UDim2.new(0, 0, 0, label.AbsoluteSize.Y + 10)
+            end
+
+            task.wait(speed)
+        end
+    end)
+end
+
+function TextUI:UpdateChoiceButtons()
+    local theme = TextUI.Themes[self.currentTheme]
+    for _, child in ipairs(self.elements.choices:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.BackgroundColor3 = theme.bgSecondary
+            child.TextColor3 = theme.text
+            local stroke = child:FindFirstChildOfClass("UIStroke")
+            if stroke then
+                stroke.Color = theme.border
+            end
+        end
+    end
+end
+
 function TextUI:Destroy()
-    if self.screenGui then
-        self.screenGui:Destroy()
+    if self.elements.screen then
+        self.elements.screen:Destroy()
     end
 end
 
